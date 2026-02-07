@@ -77,17 +77,17 @@ stages:
               command: 'build'
               projects: '$(solution)'
               arguments: '--configuration $(buildConfiguration) --no-restore'
-
           - task: DotNetCoreCLI@2
             displayName: 'dotnet test'
             inputs:
               command: 'test'
               projects: '$(testProjects)'
+              publishTestResults: false
               arguments: >-
                 --configuration $(buildConfiguration)
                 --no-build
                 --collect "XPlatCodeCoverage"
-                --results-directory $(Agent.TempDirectory)/TestResults
+                --results-directory "$(Agent.TempDirectory)/TestResults"
                 --logger trx
                 -- DataCollectionRunSettings.DataCollectors.DataCollector.Configuration.Format=opencover
             env:
