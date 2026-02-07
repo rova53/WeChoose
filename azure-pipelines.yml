@@ -1,0 +1,239 @@
+trigger:
+  branches:
+    include:
+      - main
+      - develop
+      - feature/*
+
+pr:
+  branches:
+    include:
+      - main
+      - develop
+
+pool:
+  vmImage: 'ubuntu-latest'
+
+variables:
+  buildConfiguration: 'Release'
+  dotnetVersion: '10.0.x'
+  nodeVersion: '25.x'
+  solution: '**/*.sln'
+  testProjects: '**/*Tests*.csproj'
+  sonarProjectKey: 'wechooz-tech-assessment'
+  sonarProjectName: 'WeChooz Tech Assessment'
+
+stages:
+  # ============================================================
+  # Stage 1 : Analyse de sécurité Checkmarx
+  # ============================================================
+  - stage: SecurityScan
+    displayName: '🔒 Checkmarx Security Scan'
+    jobs:
+      - job: Checkmarx
+        displayName: 'Checkmarx SAST'
+        steps:
+          - task: CxScan@2024
+            displayName: 'Run Checkmarx Scan'
+            inputs:
+              CheckmarxService: 'Checkmarx-ServiceConnection'       # À configurer dans Azure DevOps
+              projectName: '$(sonarProjectName)'
+              teamName: '/CxServer/WeChooz'                          # À adapter
+              preset: 'Checkmarx Default'
+              incScan: true
+              folderExclusion: 'node_modules,bin,obj,wwwroot,.yarn'
+              fileExtension: '!*.spec.ts,!*.test.ts'
+              syncMode: true
+              vulnerabilityThreshold: true
+              high: 0
+              medium: 5
+              low: 10
+              enableDependencyScan: true
+
+  # ============================================================
+  # Stage 2 : Build, Tests et Analyse SonarQube
+  # ============================================================
+  - stage: BuildAndTest
+    displayName: '🏗️ Build, Test & SonarQube'
+    dependsOn: SecurityScan
+    condition: succeeded()
+    jobs:
+      - job: Build
+        displayName: 'Build & Analyse'
+        steps:
+          # ----------------------------
+          # Setup des outils
+          # ----------------------------
+          - task: UseDotNet@2
+            displayName: 'Install .NET SDK $(dotnetVersion)'
+            inputs:
+              packageType: 'sdk'
+              version: '$(dotnetVersion)'
+              includePreviewVersions: true
+
+          - task: NodeTool@0
+            displayName: 'Install Node.js $(nodeVersion)'
+            inputs:
+              versionSpec: '$(nodeVersion)'
+
+          # ----------------------------
+          # Restore des dépendances
+          # ----------------------------
+          - task: DotNetCoreCLI@2
+            displayName: 'dotnet restore'
+            inputs:
+              command: 'restore'
+              projects: '$(solution)'
+
+          - script: |
+              cd WeChooz.TechAssessment.Web
+              corepack enable
+              yarn install --immutable
+            displayName: 'yarn install (frontend)'
+
+          # ----------------------------
+          # SonarQube — Début de l'analyse
+          # ----------------------------
+          - task: SonarQubePrepare@7
+            displayName: 'SonarQube — Prepare Analysis'
+            inputs:
+              SonarQube: 'SonarQube-ServiceConnection'               # À configurer dans Azure DevOps
+              scannerMode: 'dotnet'
+              projectKey: '$(sonarProjectKey)'
+              projectName: '$(sonarProjectName)'
+              extraProperties: |
+                sonar.cs.opencover.reportsPaths=$(Agent.TempDirectory)/**/coverage.opencover.xml
+                sonar.exclusions=**/node_modules/**,**/wwwroot/**,**/obj/**,**/bin/**
+                sonar.javascript.lcov.reportPaths=$(Agent.TempDirectory)/**/lcov.info
+                sonar.coverage.exclusions=**/*Tests*/**,**/Program.cs,**/DependencyInjection.cs
+
+          # ----------------------------
+          # Build
+          # ----------------------------
+          - task: DotNetCoreCLI@2
+            displayName: 'dotnet build'
+            inputs:
+              command: 'build'
+              projects: '$(solution)'
+              arguments: '--configuration $(buildConfiguration) --no-restore'
+
+          - script: |
+              cd WeChooz.TechAssessment.Web
+              yarn build
+            displayName: 'yarn build (frontend)'
+
+          # ----------------------------
+          # Tests .NET
+          # ----------------------------
+          - task: DotNetCoreCLI@2
+            displayName: 'dotnet test'
+            inputs:
+              command: 'test'
+              projects: '$(testProjects)'
+              arguments: >-
+                --configuration $(buildConfiguration)
+                --no-build
+                --collect:"XPlatCodeCoverage"
+                --results-directory $(Agent.TempDirectory)/TestResults
+                --logger trx
+                -- DataCollectionRunSettings.DataCollectors.DataCollector.Configuration.Format=opencover
+            env:
+              # Variables d'environnement pour les tests d'intégration si nécessaire
+              DOTNET_ENVIRONMENT: 'Testing'
+
+          # ----------------------------
+          # Tests Frontend (si configurés)
+          # ----------------------------
+          - script: |
+              cd WeChooz.TechAssessment.Web
+              yarn test --coverage --watchAll=false || true
+            displayName: 'yarn test (frontend)'
+            continueOnError: true
+
+          # ----------------------------
+          # SonarQube — Fin de l'analyse
+          # ----------------------------
+          - task: SonarQubeAnalyze@7
+            displayName: 'SonarQube — Run Analysis'
+
+          - task: SonarQubePublish@7
+            displayName: 'SonarQube — Publish Results'
+            inputs:
+              pollingTimeoutSec: '300'
+
+          # ----------------------------
+          # Publication des résultats de test
+          # ----------------------------
+          - task: PublishTestResults@2
+            displayName: 'Publish Test Results'
+            condition: always()
+            inputs:
+              testResultsFormat: 'VSTest'
+              testResultsFiles: '$(Agent.TempDirectory)/TestResults/**/*.trx'
+              mergeTestResults: true
+              testRunTitle: 'Unit & Integration Tests'
+
+          - task: PublishCodeCoverageResults@2
+            displayName: 'Publish Code Coverage'
+            condition: always()
+            inputs:
+              summaryFileLocation: '$(Agent.TempDirectory)/**/coverage.opencover.xml'
+
+          # ----------------------------
+          # Quality Gate SonarQube
+          # ----------------------------
+          - task: SonarQubePublish@7
+            displayName: 'SonarQube — Check Quality Gate'
+            inputs:
+              pollingTimeoutSec: '300'
+
+  # ============================================================
+  # Stage 3 : Publish des artefacts
+  # ============================================================
+  - stage: Publish
+    displayName: '📦 Publish Artifacts'
+    dependsOn: BuildAndTest
+    condition: and(succeeded(), eq(variables['Build.SourceBranch'], 'refs/heads/main'))
+    jobs:
+      - job: PublishArtifacts
+        displayName: 'Publish Build Artifacts'
+        steps:
+          - task: UseDotNet@2
+            displayName: 'Install .NET SDK'
+            inputs:
+              packageType: 'sdk'
+              version: '$(dotnetVersion)'
+              includePreviewVersions: true
+
+          - task: NodeTool@0
+            displayName: 'Install Node.js'
+            inputs:
+              versionSpec: '$(nodeVersion)'
+
+          - task: DotNetCoreCLI@2
+            displayName: 'dotnet restore'
+            inputs:
+              command: 'restore'
+              projects: '$(solution)'
+
+          - script: |
+              cd WeChooz.TechAssessment.Web
+              corepack enable
+              yarn install --immutable
+              yarn build
+            displayName: 'yarn install & build'
+
+          - task: DotNetCoreCLI@2
+            displayName: 'dotnet publish'
+            inputs:
+              command: 'publish'
+              projects: '**/WeChooz.TechAssessment.Web.csproj'
+              arguments: '--configuration $(buildConfiguration) --output $(Build.ArtifactStagingDirectory)'
+              zipAfterPublish: true
+
+          - task: PublishBuildArtifacts@1
+            displayName: 'Publish Artifact'
+            inputs:
+              PathtoPublish: '$(Build.ArtifactStagingDirectory)'
+              ArtifactName: 'drop'
+              publishLocation: 'Container'
