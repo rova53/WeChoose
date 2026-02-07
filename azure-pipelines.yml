@@ -11,8 +11,7 @@ pr:
       - main
       - develop
 
-pool:
-  vmImage: 'ubuntu-latest'
+pool: 'Self-Hosted'
 
 variables:
   buildConfiguration: 'Release'
