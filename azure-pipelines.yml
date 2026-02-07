@@ -55,6 +55,7 @@ stages:
               corepack enable
               yarn install --immutable
             displayName: 'yarn install'
+            workingDirectory: '$(Build.SourcesDirectory)/WeChooz.TechAssessment.Web'
 
           # SonarQube — Début
           - task: SonarQubePrepare@7
@@ -80,6 +81,7 @@ stages:
               cd WeChooz.TechAssessment.Web
               yarn build
             displayName: 'yarn build'
+            workingDirectory: '$(Build.SourcesDirectory)/WeChooz.TechAssessment.Web'
 
           - task: DotNetCoreCLI@2
             displayName: 'dotnet test'
@@ -155,6 +157,7 @@ stages:
               yarn install --immutable
               yarn build
             displayName: 'yarn install & build'
+            workingDirectory: '$(Build.SourcesDirectory)/WeChooz.TechAssessment.Web'
 
           - task: DotNetCoreCLI@2
             displayName: 'dotnet publish'
