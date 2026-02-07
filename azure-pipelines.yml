@@ -17,7 +17,7 @@ variables:
   buildConfiguration: 'Release'
   dotnetVersion: '10.0.x'
   nodeVersion: '25.x'
-  solution: '**/*.sln'
+  solution: '**/*.slnx'
   testProjects: '**/*Tests*.csproj'
   sonarProjectKey: 'wechooz-tech-assessment'
   sonarProjectName: 'WeChooz Tech Assessment'
