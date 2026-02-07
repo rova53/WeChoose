@@ -86,7 +86,7 @@ stages:
               arguments: >-
                 --configuration $(buildConfiguration)
                 --no-build
-                --collect:"XPlatCodeCoverage"
+                --collect "XPlatCodeCoverage"
                 --results-directory $(Agent.TempDirectory)/TestResults
                 --logger trx
                 -- DataCollectionRunSettings.DataCollectors.DataCollector.Configuration.Format=opencover
