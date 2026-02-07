@@ -113,17 +113,17 @@ export default defineConfig(async () => {
             },
         },
         server: {
-            origin: "https://localhost:" + viteDevServerPort,
+            origin: "http://localhost:" + viteDevServerPort,
             port: viteDevServerPort,
             strictPort: true,
             hmr: {
                 port: viteDevServerPort,
             },
 
-            https: {
-                cert: certFilePath,
-                key: keyFilePath,
-            },
+            /*     https: {
+                     cert: certFilePath,
+                     key: keyFilePath,
+                 },*/
         },
     };
 

@@ -34,7 +34,7 @@ builder.Services.AddAuthorization(options =>
 builder.Services.AddViteServices(options =>
 {
     options.Server.Port = 5180;
-    options.Server.Https = true;
+    options.Server.Https = false;
     options.Server.AutoRun = true;
     options.Server.UseReactRefresh = true;
     options.Manifest = "vite.manifest.json";
@@ -49,7 +49,7 @@ if (!app.Environment.IsDevelopment())
     app.UseHsts();
 }
 
-app.UseHttpsRedirection();
+//app.UseHttpsRedirection();
 
 app.UseAntiforgery();
 
