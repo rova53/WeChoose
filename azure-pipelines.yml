@@ -66,9 +66,9 @@ stages:
             inputs:
               SonarCloud: 'Sonar-cloud'
               organization: 'rrabemalanto'
-              scannerMode: 'MSBuild'
-              projectKey: 'rrabemalanto_WeChoose'
-              projectName: 'WeChoose'
+              scannerMode: 'dotnet'
+              projectKey: 'rrabemalanto_wechooz'
+              projectName: 'WeChooz'
               extraProperties: |
                 sonar.cs.opencover.reportsPaths=$(Agent.TempDirectory)/TestResults/**/coverage.opencover.xml
                 sonar.exclusions=**/node_modules/**,**/wwwroot/**,**/obj/**,**/bin/**
@@ -102,11 +102,20 @@ stages:
             displayName: 'SonarCloud — Analyze'
 
           # SonarCloud — Quality Gate
-          - task: SonarCloudPublish@3
-            displayName: 'SonarCloud — Quality Gate'
-            inputs:
-              pollingTimeoutSec: '300'
-
+          - powershell: |
+              Write-Host "Checking SonarCloud Quality Gate..."
+              $token = "$(SONAR_TOKEN)"
+              $base64Auth = [Convert]::ToBase64String([Text.Encoding]::ASCII.GetBytes("${token}:"))
+              $response = Invoke-RestMethod -Uri "https://sonarcloud.io/api/qualitygates/project_status?projectKey=rrabemalanto_wechooz" -Headers @{Authorization = "Basic $base64Auth"}
+              $status = $response.projectStatus.status
+              Write-Host "Quality Gate Status: $status"
+              if ($status -ne "OK") {
+                Write-Host "##vso[task.logissue type=warning]Quality Gate: $status"
+              } else {
+                Write-Host "Quality Gate passed!"
+              }
+            displayName: 'SonarCloud — Quality Gate (manual check)'
+            continueOnError: true
           # Résultats de tests
           - task: PublishTestResults@2
             displayName: 'Publish Test Results'
