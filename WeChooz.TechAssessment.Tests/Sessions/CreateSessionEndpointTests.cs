@@ -1,0 +1,500 @@
+﻿using Microsoft.AspNetCore.Mvc;
+using NSubstitute;
+using WeChooz.TechAssessment.Domain.Courses;
+using WeChooz.TechAssessment.Domain.Sessions;
+using WeChooz.TechAssessment.Web.Sessions;
+using WeChooz.TechAssessment.Web.Sessions.Requests;
+using WeChooz.TechAssessment.Web.Sessions.Responses;
+
+namespace WeChooz.TechAssessment.Tests.Sessions;
+
+public class CreateSessionEndpointTests
+{
+    private readonly ISessionRepository _sessionRepository;
+    private readonly ICourseRepository _courseRepository;
+    private readonly CreateSessionEndpoint _endpoint;
+
+    public CreateSessionEndpointTests()
+    {
+        _sessionRepository = Substitute.For<ISessionRepository>();
+        _courseRepository = Substitute.For<ICourseRepository>();
+        _endpoint = new CreateSessionEndpoint(_sessionRepository, _courseRepository);
+    }
+
+    [Fact]
+    public async Task HandleAsync_WithValidRequest_ShouldReturnCreatedResult()
+    {
+        // Arrange
+        var courseId = Guid.NewGuid();
+        var sessionId = Guid.NewGuid();
+
+        var course = new Course
+        {
+            Id = courseId,
+            Name = "C# Avancé",
+            ShortDescription = "C#",
+            LongDescription = "C# complet",
+            DurationInDays = 5,
+            TargetAudience = TargetAudience.CseElected,
+            MaxCapacity = 20,
+            TrainerFirstName = "Jean",
+            TrainerLastName = "Dupont",
+            Sessions = []
+        };
+
+        var request = new CreateSessionRequest
+        {
+            CourseId = courseId,
+            StartDate = new DateOnly(2026, 6, 15),
+            DeliveryMode = DeliveryMode.Remote
+        };
+
+        var createdSession = new Session
+        {
+            Id = sessionId,
+            CourseId = courseId,
+            StarDate = request.StartDate,
+            DeliveryMode = request.DeliveryMode,
+            Participants = []
+        };
+
+        var fetchedSession = new Session
+        {
+            Id = sessionId,
+            CourseId = courseId,
+            StarDate = request.StartDate,
+            DeliveryMode = request.DeliveryMode,
+            Course = course,
+            Participants = []
+        };
+
+        _courseRepository
+            .GetByIdAsync(courseId, Arg.Any<CancellationToken>())
+            .Returns(course);
+
+        _sessionRepository
+            .AddAsync(Arg.Any<Session>(), Arg.Any<CancellationToken>())
+            .Returns(createdSession);
+
+        _sessionRepository
+            .GetByIdAsync(sessionId, Arg.Any<CancellationToken>())
+            .Returns(fetchedSession);
+
+        // Act
+        var result = await _endpoint.HandleAsync(request, CancellationToken.None);
+
+        // Assert
+        var createdResult = Assert.IsType<CreatedAtActionResult>(result.Result);
+        Assert.Equal(201, createdResult.StatusCode);
+
+        var response = Assert.IsType<SessionResponse>(createdResult.Value);
+        Assert.Equal(sessionId, response.Id);
+        Assert.Equal(courseId, response.CourseId);
+        Assert.Equal("C# Avancé", response.CourseName);
+        Assert.Equal(request.StartDate, response.StartDate);
+        Assert.Equal(request.DeliveryMode, response.DeliveryMode);
+        Assert.Equal(0, response.ParticipantCount);
+    }
+
+    [Fact]
+    public async Task HandleAsync_WithNonExistingCourse_ShouldReturnBadRequest()
+    {
+        // Arrange
+        var courseId = Guid.NewGuid();
+        var request = new CreateSessionRequest
+        {
+            CourseId = courseId,
+            StartDate = new DateOnly(2026, 3, 1),
+            DeliveryMode = DeliveryMode.InPerson
+        };
+
+        _courseRepository
+            .GetByIdAsync(courseId, Arg.Any<CancellationToken>())
+            .Returns((Course?)null);
+
+        // Act
+        var result = await _endpoint.HandleAsync(request, CancellationToken.None);
+
+        // Assert
+        var badRequestResult = Assert.IsType<BadRequestObjectResult>(result.Result);
+        Assert.Contains(courseId.ToString(), badRequestResult.Value!.ToString());
+    }
+
+    [Fact]
+    public async Task HandleAsync_WithNonExistingCourse_ShouldNotCallAddAsync()
+    {
+        // Arrange
+        var request = new CreateSessionRequest
+        {
+            CourseId = Guid.NewGuid(),
+            StartDate = new DateOnly(2026, 3, 1),
+            DeliveryMode = DeliveryMode.Remote
+        };
+
+        _courseRepository
+            .GetByIdAsync(request.CourseId, Arg.Any<CancellationToken>())
+            .Returns((Course?)null);
+
+        // Act
+        await _endpoint.HandleAsync(request, CancellationToken.None);
+
+        // Assert
+        await _sessionRepository
+            .DidNotReceive()
+            .AddAsync(Arg.Any<Session>(), Arg.Any<CancellationToken>());
+    }
+
+    [Fact]
+    public async Task HandleAsync_ShouldCallAddAsyncWithCorrectValues()
+    {
+        // Arrange
+        var courseId = Guid.NewGuid();
+        var sessionId = Guid.NewGuid();
+
+        var course = new Course
+        {
+            Id = courseId,
+            Name = "Docker",
+            ShortDescription = "Docker",
+            LongDescription = "Docker complet",
+            DurationInDays = 3,
+            TargetAudience = TargetAudience.CseElected,
+            MaxCapacity = 15,
+            TrainerFirstName = "Marie",
+            TrainerLastName = "Martin",
+            Sessions = []
+        };
+
+        var request = new CreateSessionRequest
+        {
+            CourseId = courseId,
+            StartDate = new DateOnly(2026, 9, 10),
+            DeliveryMode = DeliveryMode.InPerson
+        };
+
+        _courseRepository
+            .GetByIdAsync(courseId, Arg.Any<CancellationToken>())
+            .Returns(course);
+
+        _sessionRepository
+            .AddAsync(Arg.Any<Session>(), Arg.Any<CancellationToken>())
+            .Returns(callInfo =>
+            {
+                var s = callInfo.Arg<Session>();
+                return s with { Id = sessionId };
+            });
+
+        _sessionRepository
+            .GetByIdAsync(sessionId, Arg.Any<CancellationToken>())
+            .Returns(new Session
+            {
+                Id = sessionId,
+                CourseId = courseId,
+                StarDate = request.StartDate,
+                DeliveryMode = request.DeliveryMode,
+                Course = course,
+                Participants = []
+            });
+
+        // Act
+        await _endpoint.HandleAsync(request, CancellationToken.None);
+
+        // Assert
+        await _sessionRepository
+            .Received(1)
+            .AddAsync(Arg.Is<Session>(s =>
+                s.CourseId == request.CourseId &&
+                s.StarDate == request.StartDate &&
+                s.DeliveryMode == request.DeliveryMode &&
+                s.Participants.Count == 0
+            ), Arg.Any<CancellationToken>());
+    }
+
+    [Fact]
+    public async Task HandleAsync_ShouldFetchSessionAfterCreation()
+    {
+        // Arrange
+        var courseId = Guid.NewGuid();
+        var sessionId = Guid.NewGuid();
+
+        var course = new Course
+        {
+            Id = courseId,
+            Name = "Test",
+            ShortDescription = "Test",
+            LongDescription = "Test",
+            DurationInDays = 1,
+            TargetAudience = TargetAudience.CseElected,
+            MaxCapacity = 10,
+            TrainerFirstName = "A",
+            TrainerLastName = "B",
+            Sessions = []
+        };
+
+        var request = new CreateSessionRequest
+        {
+            CourseId = courseId,
+            StartDate = new DateOnly(2026, 4, 1),
+            DeliveryMode = DeliveryMode.Remote
+        };
+
+        _courseRepository
+            .GetByIdAsync(courseId, Arg.Any<CancellationToken>())
+            .Returns(course);
+
+        _sessionRepository
+            .AddAsync(Arg.Any<Session>(), Arg.Any<CancellationToken>())
+            .Returns(new Session
+            {
+                Id = sessionId,
+                CourseId = courseId,
+                StarDate = request.StartDate,
+                DeliveryMode = request.DeliveryMode,
+                Participants = []
+            });
+
+        _sessionRepository
+            .GetByIdAsync(sessionId, Arg.Any<CancellationToken>())
+            .Returns(new Session
+            {
+                Id = sessionId,
+                CourseId = courseId,
+                StarDate = request.StartDate,
+                DeliveryMode = request.DeliveryMode,
+                Course = course,
+                Participants = []
+            });
+
+        // Act
+        await _endpoint.HandleAsync(request, CancellationToken.None);
+
+        // Assert
+        await _sessionRepository
+            .Received(1)
+            .GetByIdAsync(sessionId, Arg.Any<CancellationToken>());
+    }
+
+    [Fact]
+    public async Task HandleAsync_ShouldReturnRouteValuesWithCreatedId()
+    {
+        // Arrange
+        var courseId = Guid.NewGuid();
+        var sessionId = Guid.NewGuid();
+
+        var course = new Course
+        {
+            Id = courseId,
+            Name = "Test",
+            ShortDescription = "Test",
+            LongDescription = "Test",
+            DurationInDays = 1,
+            TargetAudience = TargetAudience.CseElected,
+            MaxCapacity = 10,
+            TrainerFirstName = "A",
+            TrainerLastName = "B",
+            Sessions = []
+        };
+
+        var request = new CreateSessionRequest
+        {
+            CourseId = courseId,
+            StartDate = new DateOnly(2026, 5, 1),
+            DeliveryMode = DeliveryMode.InPerson
+        };
+
+        _courseRepository
+            .GetByIdAsync(courseId, Arg.Any<CancellationToken>())
+            .Returns(course);
+
+        _sessionRepository
+            .AddAsync(Arg.Any<Session>(), Arg.Any<CancellationToken>())
+            .Returns(new Session
+            {
+                Id = sessionId,
+                CourseId = courseId,
+                StarDate = request.StartDate,
+                DeliveryMode = request.DeliveryMode,
+                Participants = []
+            });
+
+        _sessionRepository
+            .GetByIdAsync(sessionId, Arg.Any<CancellationToken>())
+            .Returns(new Session
+            {
+                Id = sessionId,
+                CourseId = courseId,
+                StarDate = request.StartDate,
+                DeliveryMode = request.DeliveryMode,
+                Course = course,
+                Participants = []
+            });
+
+        // Act
+        var result = await _endpoint.HandleAsync(request, CancellationToken.None);
+
+        // Assert
+        var createdResult = Assert.IsType<CreatedAtActionResult>(result.Result);
+        Assert.Equal(nameof(GetSessionByIdEndpoint), createdResult.ActionName);
+        Assert.Equal(sessionId, createdResult.RouteValues!["id"]);
+    }
+
+    [Fact]
+    public async Task HandleAsync_ShouldPassCancellationTokenToCourseRepository()
+    {
+        // Arrange
+        var request = new CreateSessionRequest
+        {
+            CourseId = Guid.NewGuid(),
+            StartDate = new DateOnly(2026, 3, 1),
+            DeliveryMode = DeliveryMode.Remote
+        };
+
+        using var cts = new CancellationTokenSource();
+        var token = cts.Token;
+
+        _courseRepository
+            .GetByIdAsync(request.CourseId, Arg.Any<CancellationToken>())
+            .Returns((Course?)null);
+
+        // Act
+        await _endpoint.HandleAsync(request, token);
+
+        // Assert
+        await _courseRepository
+            .Received(1)
+            .GetByIdAsync(request.CourseId, token);
+    }
+
+    [Fact]
+    public async Task HandleAsync_ShouldPassCancellationTokenToAddAsync()
+    {
+        // Arrange
+        var courseId = Guid.NewGuid();
+        var sessionId = Guid.NewGuid();
+
+        var course = new Course
+        {
+            Id = courseId,
+            Name = "Test",
+            ShortDescription = "Test",
+            LongDescription = "Test",
+            DurationInDays = 1,
+            TargetAudience = TargetAudience.CseElected,
+            MaxCapacity = 10,
+            TrainerFirstName = "A",
+            TrainerLastName = "B",
+            Sessions = []
+        };
+
+        var request = new CreateSessionRequest
+        {
+            CourseId = courseId,
+            StartDate = new DateOnly(2026, 3, 1),
+            DeliveryMode = DeliveryMode.Remote
+        };
+
+        using var cts = new CancellationTokenSource();
+        var token = cts.Token;
+
+        _courseRepository
+            .GetByIdAsync(courseId, Arg.Any<CancellationToken>())
+            .Returns(course);
+
+        _sessionRepository
+            .AddAsync(Arg.Any<Session>(), Arg.Any<CancellationToken>())
+            .Returns(new Session
+            {
+                Id = sessionId,
+                CourseId = courseId,
+                StarDate = request.StartDate,
+                DeliveryMode = request.DeliveryMode,
+                Participants = []
+            });
+
+        _sessionRepository
+            .GetByIdAsync(sessionId, Arg.Any<CancellationToken>())
+            .Returns(new Session
+            {
+                Id = sessionId,
+                CourseId = courseId,
+                StarDate = request.StartDate,
+                DeliveryMode = request.DeliveryMode,
+                Course = course,
+                Participants = []
+            });
+
+        // Act
+        await _endpoint.HandleAsync(request, token);
+
+        // Assert
+        await _sessionRepository
+            .Received(1)
+            .AddAsync(Arg.Any<Session>(), token);
+    }
+
+    [Theory]
+    [InlineData(DeliveryMode.Remote)]
+    [InlineData(DeliveryMode.InPerson)]
+    public async Task HandleAsync_WithDifferentDeliveryModes_ShouldMapCorrectly(DeliveryMode deliveryMode)
+    {
+        // Arrange
+        var courseId = Guid.NewGuid();
+        var sessionId = Guid.NewGuid();
+
+        var course = new Course
+        {
+            Id = courseId,
+            Name = "Test",
+            ShortDescription = "Test",
+            LongDescription = "Test",
+            DurationInDays = 1,
+            TargetAudience = TargetAudience.CseElected,
+            MaxCapacity = 10,
+            TrainerFirstName = "A",
+            TrainerLastName = "B",
+            Sessions = []
+        };
+
+        var request = new CreateSessionRequest
+        {
+            CourseId = courseId,
+            StartDate = new DateOnly(2026, 7, 1),
+            DeliveryMode = deliveryMode
+        };
+
+        _courseRepository
+            .GetByIdAsync(courseId, Arg.Any<CancellationToken>())
+            .Returns(course);
+
+        _sessionRepository
+            .AddAsync(Arg.Any<Session>(), Arg.Any<CancellationToken>())
+            .Returns(new Session
+            {
+                Id = sessionId,
+                CourseId = courseId,
+                StarDate = request.StartDate,
+                DeliveryMode = deliveryMode,
+                Participants = []
+            });
+
+        _sessionRepository
+            .GetByIdAsync(sessionId, Arg.Any<CancellationToken>())
+            .Returns(new Session
+            {
+                Id = sessionId,
+                CourseId = courseId,
+                StarDate = request.StartDate,
+                DeliveryMode = deliveryMode,
+                Course = course,
+                Participants = []
+            });
+
+        // Act
+        var result = await _endpoint.HandleAsync(request, CancellationToken.None);
+
+        // Assert
+        var createdResult = Assert.IsType<CreatedAtActionResult>(result.Result);
+        var response = Assert.IsType<SessionResponse>(createdResult.Value);
+        Assert.Equal(deliveryMode, response.DeliveryMode);
+    }
+}
