@@ -1,6 +1,9 @@
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc.Razor;
+using Microsoft.EntityFrameworkCore;
 using Vite.AspNetCore;
+using WeChooz.TechAssessment.Infrastructure;
+using WeChooz.TechAssessment.Infrastructure.Persistence;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -10,6 +13,8 @@ builder.AddServiceDefaults();
 var sqlServerConnectionString = builder.Configuration.GetConnectionString("formation") ?? throw new InvalidOperationException("Connection string 'formation' not found.");
 var redisConnectionString = builder.Configuration.GetConnectionString("cache") ?? throw new InvalidOperationException("Connection string 'cache' not found.");
 
+
+builder.Services.AddInfrastructure(sqlServerConnectionString);
 builder.Services.AddControllersWithViews();
 builder.Services.Configure<RazorViewEngineOptions>(options =>
 {
@@ -41,6 +46,12 @@ builder.Services.AddViteServices(options =>
 });
 
 var app = builder.Build();
+
+using (var scope = app.Services.CreateScope())
+{
+    var dbContext = scope.ServiceProvider.GetRequiredService<AppDbContext>();
+    await dbContext.Database.MigrateAsync();
+}
 
 if (!app.Environment.IsDevelopment())
 {
