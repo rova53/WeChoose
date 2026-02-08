@@ -19,8 +19,8 @@ variables:
   nodeVersion: '25.x'
   solution: '**/*.sln'
   testProjects: '**/*Tests*.csproj'
-  sonarProjectKey: 'wechooz-tech-assessment'
-  sonarProjectName: 'WeChooz Tech Assessment'
+  webProject: '**/WeChooz.TechAssessment.Web.csproj'
+  webDirectory: 'WeChooz.TechAssessment.Web'
 
 stages:
   # ============================================================
@@ -32,6 +32,9 @@ stages:
       - job: Build
         displayName: 'Build & Analyse'
         steps:
+          - checkout: self
+            fetchDepth: 0
+
           - task: UseDotNet@2
             displayName: 'Install .NET SDK'
             inputs:
@@ -51,23 +54,23 @@ stages:
               projects: '$(solution)'
 
           - script: |
-              cd WeChooz.TechAssessment.Web
               corepack enable
               yarn install --immutable
               yarn build
             displayName: 'yarn install & build'
-            workingDirectory: '$(Build.SourcesDirectory)/WeChooz.TechAssessment.Web'
+            workingDirectory: '$(Build.SourcesDirectory)/$(webDirectory)'
 
-          # SonarQube — Début
-          - task: SonarQubePrepare@7
-            displayName: 'SonarQube — Prepare'
+          # SonarCloud — Début
+          - task: SonarCloudPrepare@3
+            displayName: 'SonarCloud — Prepare'
             inputs:
-              SonarQube: 'SonarQube-ServiceConnection'
-              scannerMode: 'dotnet'
-              projectKey: '$(sonarProjectKey)'
-              projectName: '$(sonarProjectName)'
+              SonarCloud: 'Sonar-cloud'
+              organization: 'rrabemalanto'
+              scannerMode: 'MSBuild'
+              projectKey: 'rrabemalanto_WeChoose'
+              projectName: 'WeChoose'
               extraProperties: |
-                sonar.cs.opencover.reportsPaths=$(Agent.TempDirectory)/**/coverage.opencover.xml
+                sonar.cs.opencover.reportsPaths=$(Agent.TempDirectory)/TestResults/**/coverage.opencover.xml
                 sonar.exclusions=**/node_modules/**,**/wwwroot/**,**/obj/**,**/bin/**
                 sonar.coverage.exclusions=**/*Tests*/**,**/Program.cs
 
@@ -77,6 +80,7 @@ stages:
               command: 'build'
               projects: '$(solution)'
               arguments: '--configuration $(buildConfiguration) --no-restore'
+
           - task: DotNetCoreCLI@2
             displayName: 'dotnet test'
             inputs:
@@ -86,20 +90,20 @@ stages:
               arguments: >-
                 --configuration $(buildConfiguration)
                 --no-build
-                --collect "XPlatCodeCoverage"
+                --collect:"XPlat Code Coverage"
                 --results-directory "$(Agent.TempDirectory)/TestResults"
-                --logger trx
+                --logger "trx;LogFileName=testresults.trx"
                 -- DataCollectionRunSettings.DataCollectors.DataCollector.Configuration.Format=opencover
             env:
               DOTNET_ENVIRONMENT: 'Testing'
 
-          # SonarQube — Analyse
-          - task: SonarQubeAnalyze@7
-            displayName: 'SonarQube — Analyze'
+          # SonarCloud — Analyse
+          - task: SonarCloudAnalyze@3
+            displayName: 'SonarCloud — Analyze'
 
-          # SonarQube — Quality Gate
-          - task: SonarQubePublish@7
-            displayName: 'SonarQube — Quality Gate'
+          # SonarCloud — Quality Gate
+          - task: SonarCloudPublish@3
+            displayName: 'SonarCloud — Quality Gate'
             inputs:
               pollingTimeoutSec: '300'
 
@@ -113,11 +117,12 @@ stages:
               mergeTestResults: true
               testRunTitle: 'Unit & Integration Tests'
 
-          - task: PublishCodeCoverageResults@2
+          - task: PublishCodeCoverageResults@1
             displayName: 'Publish Code Coverage'
             condition: always()
             inputs:
-              summaryFileLocation: '$(Agent.TempDirectory)/**/coverage.opencover.xml'
+              codeCoverageTool: 'Cobertura'
+              summaryFileLocation: '$(Agent.TempDirectory)/TestResults/**/coverage.cobertura.xml'
 
   # ============================================================
   # Stage 2 : Publish (uniquement main)
@@ -130,13 +135,17 @@ stages:
       - job: PublishArtifacts
         displayName: 'Publish'
         steps:
+          - checkout: self
+
           - task: UseDotNet@2
+            displayName: 'Install .NET SDK'
             inputs:
               packageType: 'sdk'
               version: '$(dotnetVersion)'
               includePreviewVersions: true
 
           - task: NodeTool@0
+            displayName: 'Install Node.js'
             inputs:
               versionSpec: '$(nodeVersion)'
 
@@ -147,22 +156,22 @@ stages:
               projects: '$(solution)'
 
           - script: |
-              cd WeChooz.TechAssessment.Web
               corepack enable
               yarn install --immutable
               yarn build
             displayName: 'yarn install & build'
-            workingDirectory: '$(Build.SourcesDirectory)/WeChooz.TechAssessment.Web'
+            workingDirectory: '$(Build.SourcesDirectory)/$(webDirectory)'
 
           - task: DotNetCoreCLI@2
             displayName: 'dotnet publish'
             inputs:
               command: 'publish'
-              projects: '**/WeChooz.TechAssessment.Web.csproj'
-              arguments: '--configuration $(buildConfiguration) --output $(Build.ArtifactStagingDirectory)'
+              projects: '$(webProject)'
+              arguments: '--configuration $(buildConfiguration) --no-restore --output $(Build.ArtifactStagingDirectory)'
               zipAfterPublish: true
 
           - task: PublishBuildArtifacts@1
+            displayName: 'Publish Build Artifacts'
             inputs:
               PathtoPublish: '$(Build.ArtifactStagingDirectory)'
               ArtifactName: 'drop'
