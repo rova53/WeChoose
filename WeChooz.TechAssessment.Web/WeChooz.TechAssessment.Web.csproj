@@ -27,6 +27,7 @@
   </ItemGroup>
 
   <ItemGroup>
+    <Folder Include="Home\Requests\" />
     <Folder Include="wwwroot\" />
   </ItemGroup>
 
