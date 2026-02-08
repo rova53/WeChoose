@@ -71,8 +71,8 @@ stages:
               projectName: 'WeChooz'
               extraProperties: |
                 sonar.cs.opencover.reportsPaths=$(Agent.TempDirectory)/TestResults/**/coverage.opencover.xml
-                sonar.exclusions=**/node_modules/**,**/wwwroot/**,**/obj/**,**/bin/**
-                sonar.coverage.exclusions=**/*Tests*/**,**/Program.cs
+                sonar.exclusions=**/node_modules/**,**/wwwroot/**,**/obj/**,**/bin/**,**/vite.config.ts,**/ClientApp/**
+                sonar.coverage.exclusions=**/*Tests*/**,**/Program.cs,**/vite.config.ts,**/ClientApp/**,**/WeChooz.TechAssessment.ServiceDefaults/**
 
           - task: DotNetCoreCLI@2
             displayName: 'dotnet build'
