@@ -6,4 +6,6 @@ public interface IUserRepository : IRepository<User>
 {
     Task<IReadOnlyCollection<User>> GetBySessionIdAsync(Guid sessionId, CancellationToken cancellationToken = default);
     Task<bool> IsUserRegisteredAsync(Guid sessionId, string email, CancellationToken cancellationToken = default);
+    Task<bool> FindByNameAndPassAsync(string modelUsername, string modelPassword, 
+        CancellationToken cancellationToken = default);
 }

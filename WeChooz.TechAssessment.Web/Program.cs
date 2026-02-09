@@ -7,7 +7,6 @@ using WeChooz.TechAssessment.Infrastructure.Persistence;
 
 var builder = WebApplication.CreateBuilder(args);
 
-// Add service defaults & Aspire client integrations.
 builder.AddServiceDefaults();
 
 var sqlServerConnectionString = builder.Configuration.GetConnectionString("formation") ?? throw new InvalidOperationException("Connection string 'formation' not found.");
@@ -24,6 +23,11 @@ builder.Services.AddAuthentication("Cookies")
     .AddCookie("Cookies", options =>
     {
         options.Cookie.Name = "AspireAuthCookie";
+        options.LoginPath = "/Account/Login";
+        options.LogoutPath = "/Account/Logout";
+        options.Cookie.HttpOnly = true;
+        options.ExpireTimeSpan = TimeSpan.FromMinutes(60);
+        options.SlidingExpiration = true;
     });
 builder.Services.AddAuthorization(options =>
 {
@@ -35,7 +39,6 @@ builder.Services.AddAuthorization(options =>
     options.AddPolicy("Sales", policy => policy.Combine(defaultPolicy).RequireRole("sales"));
 });
 
-
 builder.Services.AddViteServices(options =>
 {
     options.Server.Port = 5180;
@@ -46,7 +49,8 @@ builder.Services.AddViteServices(options =>
 });
 
 var app = builder.Build();
-
+app.UseAuthentication();
+app.UseAuthorization();
 using (var scope = app.Services.CreateScope())
 {
     var dbContext = scope.ServiceProvider.GetRequiredService<AppDbContext>();
@@ -56,11 +60,8 @@ using (var scope = app.Services.CreateScope())
 if (!app.Environment.IsDevelopment())
 {
     app.UseExceptionHandler("/Error", createScopeForErrors: true);
-    // The default HSTS value is 30 days. You may want to change this for production scenarios, see https://aka.ms/aspnetcore-hsts.
     app.UseHsts();
 }
-
-//app.UseHttpsRedirection();
 
 app.UseAntiforgery();
 

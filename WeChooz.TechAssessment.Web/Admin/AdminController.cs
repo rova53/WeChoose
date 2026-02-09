@@ -1,8 +1,9 @@
-﻿using Microsoft.AspNetCore.Mvc;
+﻿using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Mvc;
 using Microsoft.Net.Http.Headers;
 
 namespace WeChooz.TechAssessment.Web.Admin;
-
+[Authorize]
 public class AdminController : Controller
 {
     [HttpGet]

@@ -1,4 +1,16 @@
-﻿import ReactDOM, { Container } from "react-dom/client";
-import './index.css'
-const root = ReactDOM.createRoot(document.getElementById("react-app") as Container);
-root.render(<h1>Hello public page</h1>);
+﻿
+import React from "react";
+import ReactDOM from "react-dom/client";
+import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
+import './index.css';
+import PublicCatalogPage from "./pages/PublicCatalogPage";
+const root = ReactDOM.createRoot(document.getElementById("react-app") as HTMLElement);
+root.render(
+    <React.StrictMode>
+        <BrowserRouter>
+            <Routes>
+                <Route path="*" element={<PublicCatalogPage />} />
+            </Routes>
+        </BrowserRouter>
+    </React.StrictMode>
+);
