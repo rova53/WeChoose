@@ -1,6 +1,6 @@
 ﻿using FluentAssertions;
 using WeChooz.TechAssessment.Domain.Courses;
-using WeChooz.TechAssessment.Domain.Participants;
+using WeChooz.TechAssessment.Domain.Users;
 using WeChooz.TechAssessment.Domain.Sessions;
 using WeChooz.TechAssessment.Infrastructure.Courses;
 using WeChooz.TechAssessment.Infrastructure.Tests.Helpers;
@@ -21,7 +21,7 @@ public class CourseRepositoryTests
         TrainerFirstName = "Jean",
         TrainerLastName = "Dupont"
     };
-    
+
     private static Session CreateSession(Guid courseId, Guid? id = null) => new()
     {
         Id = id ?? Guid.NewGuid(),
@@ -29,8 +29,8 @@ public class CourseRepositoryTests
         StarDate = DateOnly.FromDateTime(DateTime.UtcNow.AddDays(30)),
         DeliveryMode = DeliveryMode.InPerson
     };
-    
-    private static Participant CreateParticipant(Guid sessionId, Guid? id = null) => new()
+
+    private static User CreateUser(Guid sessionId, Guid? id = null) => new()
     {
         Id = id ?? Guid.NewGuid(),
         SessionId = sessionId,
@@ -39,7 +39,7 @@ public class CourseRepositoryTests
         Email = "pierre@test.com",
         CompanyName = "ACME"
     };
-    
+
     [Fact]
     public async Task GetByIdAsync_Should_Include_Sessions()
     {
@@ -59,17 +59,17 @@ public class CourseRepositoryTests
         result!.Sessions.Should().HaveCount(1);
         result.Sessions.First().Id.Should().Be(session.Id);
     }
-    
+
     [Fact]
-    public async Task GetByIdAsync_Should_Include_Sessions_And_Participants()
+    public async Task GetByIdAsync_Should_Include_Sessions_And_Users()
     {
         using var context = DbContextFactory.Create();
         var repo = new CourseRepository(context);
 
         var course = CreateCourse();
         var session = CreateSession(course.Id);
-        var participant = CreateParticipant(session.Id);
-        session.Participants = [participant];
+        var User = CreateUser(session.Id);
+        session.Users = [User];
         course.Sessions = [session];
 
         context.Courses.Add(course);
@@ -79,8 +79,8 @@ public class CourseRepositoryTests
 
         result.Should().NotBeNull();
         result!.Sessions.Should().HaveCount(1);
-        result.Sessions.First().Participants.Should().HaveCount(1);
-        result.Sessions.First().Participants.First().Email.Should().Be("pierre@test.com");
+        result.Sessions.First().Users.Should().HaveCount(1);
+        result.Sessions.First().Users.First().Email.Should().Be("pierre@test.com");
     }
     [Fact]
     public async Task GetByIdAsync_Should_Return_Null_When_Not_Found()
@@ -133,7 +133,7 @@ public class CourseRepositoryTests
         result.Should().HaveCount(1);
         result[0].Sessions.Should().HaveCount(1);
     }
-    
+
     [Fact]
     public async Task GetAllAsync_Should_Return_Empty_When_No_Courses()
     {

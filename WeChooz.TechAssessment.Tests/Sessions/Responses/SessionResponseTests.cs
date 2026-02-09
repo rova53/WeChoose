@@ -1,5 +1,5 @@
 ﻿using WeChooz.TechAssessment.Domain.Courses;
-using WeChooz.TechAssessment.Domain.Participants;
+using WeChooz.TechAssessment.Domain.Users;
 using WeChooz.TechAssessment.Domain.Sessions;
 using WeChooz.TechAssessment.Web.Sessions.Responses;
 
@@ -30,7 +30,7 @@ public class SessionResponseTests
                 TrainerFirstName = "Jean",
                 TrainerLastName = "Dupont"
             },
-            Participants = new List<Participant>
+            Users = new List<User>
             {
                 new() { Id = Guid.NewGuid(), SessionId = Guid.NewGuid(), LastName = "P1", FirstName = "F1", Email = "p1@test.com", CompanyName = "C1" },
                 new() { Id = Guid.NewGuid(), SessionId = Guid.NewGuid(), LastName = "P2", FirstName = "F2", Email = "p2@test.com", CompanyName = "C2" }
@@ -46,7 +46,7 @@ public class SessionResponseTests
         Assert.Equal("C# Avancé", response.CourseName);
         Assert.Equal(session.StarDate, response.StartDate);
         Assert.Equal(session.DeliveryMode, response.DeliveryMode);
-        Assert.Equal(2, response.ParticipantCount);
+        Assert.Equal(2, response.UserCount);
     }
 
     [Fact]
@@ -60,7 +60,7 @@ public class SessionResponseTests
             StarDate = new DateOnly(2026, 3, 1),
             DeliveryMode = DeliveryMode.InPerson,
             Course = null!,
-            Participants = []
+            Users = []
         };
 
         // Act
@@ -71,7 +71,7 @@ public class SessionResponseTests
     }
 
     [Fact]
-    public void FromDomain_WithNullParticipants_ShouldReturnZeroParticipantCount()
+    public void FromDomain_WithNullUsers_ShouldReturnZeroUserCount()
     {
         // Arrange
         var session = new Session
@@ -92,18 +92,18 @@ public class SessionResponseTests
                 TrainerFirstName = "A",
                 TrainerLastName = "B"
             },
-            Participants = null!
+            Users = null!
         };
 
         // Act
         var response = SessionResponse.FromDomain(session);
 
         // Assert
-        Assert.Equal(0, response.ParticipantCount);
+        Assert.Equal(0, response.UserCount);
     }
 
     [Fact]
-    public void FromDomain_WithEmptyParticipants_ShouldReturnZeroParticipantCount()
+    public void FromDomain_WithEmptyUsers_ShouldReturnZeroUserCount()
     {
         // Arrange
         var session = new Session
@@ -124,14 +124,14 @@ public class SessionResponseTests
                 TrainerFirstName = "A",
                 TrainerLastName = "B"
             },
-            Participants = []
+            Users = []
         };
 
         // Act
         var response = SessionResponse.FromDomain(session);
 
         // Assert
-        Assert.Equal(0, response.ParticipantCount);
+        Assert.Equal(0, response.UserCount);
     }
 
     [Fact]
@@ -145,7 +145,7 @@ public class SessionResponseTests
             StarDate = default,
             DeliveryMode = DeliveryMode.Remote,
             Course = null!,
-            Participants = []
+            Users = []
         };
 
         // Act
@@ -179,7 +179,7 @@ public class SessionResponseTests
                 TrainerFirstName = "A",
                 TrainerLastName = "B"
             },
-            Participants = []
+            Users = []
         };
 
         // Act
@@ -193,7 +193,7 @@ public class SessionResponseTests
         Assert.Equal(response1.CourseName, response2.CourseName);
         Assert.Equal(response1.StartDate, response2.StartDate);
         Assert.Equal(response1.DeliveryMode, response2.DeliveryMode);
-        Assert.Equal(response1.ParticipantCount, response2.ParticipantCount);
+        Assert.Equal(response1.UserCount, response2.UserCount);
     }
 
     [Theory]
@@ -209,7 +209,7 @@ public class SessionResponseTests
             StarDate = new DateOnly(2026, 8, 1),
             DeliveryMode = deliveryMode,
             Course = null!,
-            Participants = []
+            Users = []
         };
 
         // Act

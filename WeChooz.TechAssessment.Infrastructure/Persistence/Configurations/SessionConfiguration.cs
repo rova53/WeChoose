@@ -4,7 +4,7 @@ using WeChooz.TechAssessment.Domain.Sessions;
 
 namespace WeChooz.TechAssessment.Infrastructure.Persistence.Configurations;
 
-public class SessionConfiguration: IEntityTypeConfiguration<Session>
+public class SessionConfiguration : IEntityTypeConfiguration<Session>
 {
     public void Configure(EntityTypeBuilder<Session> builder)
     {
@@ -29,7 +29,7 @@ public class SessionConfiguration: IEntityTypeConfiguration<Session>
             .HasForeignKey(s => s.CourseId)
             .OnDelete(DeleteBehavior.Cascade);
 
-        builder.HasMany(s => s.Participants)
+        builder.HasMany(s => s.Users)
             .WithOne(p => p.Session)
             .HasForeignKey(p => p.SessionId)
             .OnDelete(DeleteBehavior.Cascade);

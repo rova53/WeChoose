@@ -1,16 +1,16 @@
 ﻿using Microsoft.EntityFrameworkCore;
 using WeChooz.TechAssessment.Domain.Courses;
-using WeChooz.TechAssessment.Domain.Participants;
+using WeChooz.TechAssessment.Domain.Users;
 using WeChooz.TechAssessment.Domain.Sessions;
 
 namespace WeChooz.TechAssessment.Infrastructure.Persistence;
 
-public class AppDbContext: DbContext
+public class AppDbContext : DbContext
 {
-    
+
     public DbSet<Course> Courses => Set<Course>();
     public DbSet<Session> Sessions => Set<Session>();
-    public DbSet<Participant> Participants => Set<Participant>();
+    public DbSet<User> Users => Set<User>();
 
     public AppDbContext(DbContextOptions<AppDbContext> options) : base(options)
     {

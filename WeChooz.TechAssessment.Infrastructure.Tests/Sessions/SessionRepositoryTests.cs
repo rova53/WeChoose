@@ -1,6 +1,6 @@
 ﻿using FluentAssertions;
 using WeChooz.TechAssessment.Domain.Courses;
-using WeChooz.TechAssessment.Domain.Participants;
+using WeChooz.TechAssessment.Domain.Users;
 using WeChooz.TechAssessment.Domain.Sessions;
 using WeChooz.TechAssessment.Infrastructure.Sessions;
 using WeChooz.TechAssessment.Infrastructure.Tests.Helpers;
@@ -21,7 +21,7 @@ public class SessionRepositoryTests
         TrainerFirstName = "Marie",
         TrainerLastName = "Martin"
     };
-    
+
     private static Session CreateSession(Guid courseId, DateOnly? date = null, DeliveryMode mode = DeliveryMode.InPerson, Guid? id = null) => new()
     {
         Id = id ?? Guid.NewGuid(),
@@ -29,8 +29,8 @@ public class SessionRepositoryTests
         StarDate = date ?? DateOnly.FromDateTime(DateTime.UtcNow.AddDays(30)),
         DeliveryMode = mode
     };
-    
-    private static Participant CreateParticipant(Guid sessionId, string email = "test@test.com", Guid? id = null) => new()
+
+    private static User CreateUser(Guid sessionId, string email = "test@test.com", Guid? id = null) => new()
     {
         Id = id ?? Guid.NewGuid(),
         SessionId = sessionId,
@@ -39,7 +39,7 @@ public class SessionRepositoryTests
         Email = email,
         CompanyName = "ACME"
     };
-    
+
     [Fact]
     public async Task GetByIdAsync_Should_Include_Course()
     {
@@ -60,25 +60,25 @@ public class SessionRepositoryTests
         result.Course.Name.Should().Be("Formation CSE");
     }
     [Fact]
-    public async Task GetByIdAsync_Should_Include_Participants()
+    public async Task GetByIdAsync_Should_Include_Users()
     {
         using var context = DbContextFactory.Create();
         var repo = new SessionRepository(context);
 
         var course = CreateCourse();
         var session = CreateSession(course.Id);
-        var participant = CreateParticipant(session.Id);
+        var User = CreateUser(session.Id);
 
         context.Courses.Add(course);
         context.Sessions.Add(session);
-        context.Participants.Add(participant);
+        context.Users.Add(User);
         await context.SaveChangesAsync();
 
         var result = await repo.GetByIdAsync(session.Id);
 
         result.Should().NotBeNull();
-        result!.Participants.Should().HaveCount(1);
-        result.Participants.First().Email.Should().Be("test@test.com");
+        result!.Users.Should().HaveCount(1);
+        result.Users.First().Email.Should().Be("test@test.com");
     }
     [Fact]
     public async Task GetByIdAsync_Should_Return_Null_When_Not_Found()
@@ -90,7 +90,7 @@ public class SessionRepositoryTests
 
         result.Should().BeNull();
     }
-    
+
     [Fact]
     public async Task GetAllAsync_Should_Return_Sessions_Ordered_By_StarDate()
     {
@@ -114,25 +114,25 @@ public class SessionRepositoryTests
         result[2].StarDate.Should().Be(sessionLate.StarDate);
     }
     [Fact]
-    public async Task GetAllAsync_Should_Include_Course_And_Participants()
+    public async Task GetAllAsync_Should_Include_Course_And_Users()
     {
         using var context = DbContextFactory.Create();
         var repo = new SessionRepository(context);
 
         var course = CreateCourse();
         var session = CreateSession(course.Id);
-        var participant = CreateParticipant(session.Id);
+        var User = CreateUser(session.Id);
 
         context.Courses.Add(course);
         context.Sessions.Add(session);
-        context.Participants.Add(participant);
+        context.Users.Add(User);
         await context.SaveChangesAsync();
 
         var result = (await repo.GetAllAsync()).ToList();
 
         result.Should().HaveCount(1);
         result[0].Course.Should().NotBeNull();
-        result[0].Participants.Should().HaveCount(1);
+        result[0].Users.Should().HaveCount(1);
     }
     [Fact]
     public async Task GetAllAsync_Should_Return_Empty_When_No_Sessions()

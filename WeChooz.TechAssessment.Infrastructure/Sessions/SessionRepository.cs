@@ -6,7 +6,7 @@ using WeChooz.TechAssessment.Infrastructure.Persistence;
 
 namespace WeChooz.TechAssessment.Infrastructure.Sessions;
 
-public class SessionRepository: BaseRepository<Session>, ISessionRepository
+public class SessionRepository : BaseRepository<Session>, ISessionRepository
 {
     public SessionRepository(AppDbContext dbContext) : base(dbContext)
     {
@@ -16,7 +16,7 @@ public class SessionRepository: BaseRepository<Session>, ISessionRepository
     {
         return await DbSet
             .Include(s => s.Course)
-            .Include(s => s.Participants)
+            .Include(s => s.Users)
             .FirstOrDefaultAsync(s => s.Id == id, cancellationToken);
     }
 
@@ -25,7 +25,7 @@ public class SessionRepository: BaseRepository<Session>, ISessionRepository
         return await DbSet
             .AsNoTracking()
             .Include(s => s.Course)
-            .Include(s => s.Participants)
+            .Include(s => s.Users)
             .OrderBy(s => s.StarDate)
             .ToListAsync(cancellationToken);
     }
@@ -36,7 +36,7 @@ public class SessionRepository: BaseRepository<Session>, ISessionRepository
         throw new NotImplementedException();
     }
 
-    public Task<Session?> GetByIdWithParticipantsAsync(Guid id, CancellationToken cancellationToken = default)
+    public Task<Session?> GetByIdWithUsersAsync(Guid id, CancellationToken cancellationToken = default)
     {
         throw new NotImplementedException();
     }

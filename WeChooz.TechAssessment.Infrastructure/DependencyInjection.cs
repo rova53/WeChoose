@@ -1,10 +1,10 @@
 ﻿using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
 using WeChooz.TechAssessment.Domain.Courses;
-using WeChooz.TechAssessment.Domain.Participants;
+using WeChooz.TechAssessment.Domain.Users;
 using WeChooz.TechAssessment.Domain.Sessions;
 using WeChooz.TechAssessment.Infrastructure.Courses;
-using WeChooz.TechAssessment.Infrastructure.Participants;
+using WeChooz.TechAssessment.Infrastructure.Users;
 using WeChooz.TechAssessment.Infrastructure.Persistence;
 using WeChooz.TechAssessment.Infrastructure.Sessions;
 
@@ -17,8 +17,8 @@ public static class DependencyInjection
         services.AddDbContext<AppDbContext>(op => op.UseSqlServer(connectionString));
         services.AddScoped<ICourseRepository, CourseRepository>();
         services.AddScoped<ISessionRepository, SessionRepository>();
-        services.AddScoped<IParticipantRepository, ParticipantRepository>();
-        
+        services.AddScoped<IUserRepository, UserRepository>();
+
         return services;
     }
 
