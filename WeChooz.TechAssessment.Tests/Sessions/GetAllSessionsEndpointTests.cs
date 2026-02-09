@@ -1,7 +1,7 @@
 ﻿using Microsoft.AspNetCore.Mvc;
 using NSubstitute;
 using WeChooz.TechAssessment.Domain.Courses;
-using WeChooz.TechAssessment.Domain.Participants;
+using WeChooz.TechAssessment.Domain.Users;
 using WeChooz.TechAssessment.Domain.Sessions;
 using WeChooz.TechAssessment.Web.Sessions;
 using WeChooz.TechAssessment.Web.Sessions.Responses;
@@ -44,7 +44,7 @@ public class GetAllSessionsEndpointTests
                     TrainerFirstName = "Jean",
                     TrainerLastName = "Dupont"
                 },
-                Participants = new List<Participant>
+                Users = new List<User>
                 {
                     new() { Id = Guid.NewGuid(), SessionId = courseId, LastName = "P1", FirstName = "F1", Email = "p1@test.com", CompanyName = "C1" }
                 }
@@ -67,7 +67,7 @@ public class GetAllSessionsEndpointTests
                     TrainerFirstName = "Marie",
                     TrainerLastName = "Martin"
                 },
-                Participants = []
+                Users = []
             }
         };
 
@@ -86,10 +86,10 @@ public class GetAllSessionsEndpointTests
         Assert.Equal(2, responseList.Count);
         Assert.Equal(sessions[0].Id, responseList[0].Id);
         Assert.Equal("C# Avancé", responseList[0].CourseName);
-        Assert.Equal(1, responseList[0].ParticipantCount);
+        Assert.Equal(1, responseList[0].UserCount);
         Assert.Equal(sessions[1].Id, responseList[1].Id);
         Assert.Equal("Docker", responseList[1].CourseName);
-        Assert.Equal(0, responseList[1].ParticipantCount);
+        Assert.Equal(0, responseList[1].UserCount);
     }
 
     [Fact]
@@ -169,7 +169,7 @@ public class GetAllSessionsEndpointTests
                 TrainerFirstName = "Pierre",
                 TrainerLastName = "Durand"
             },
-            Participants = []
+            Users = []
         };
 
         _sessionRepository
@@ -188,6 +188,6 @@ public class GetAllSessionsEndpointTests
         Assert.Equal("Kubernetes", response.CourseName);
         Assert.Equal(session.StarDate, response.StartDate);
         Assert.Equal(session.DeliveryMode, response.DeliveryMode);
-        Assert.Equal(0, response.ParticipantCount);
+        Assert.Equal(0, response.UserCount);
     }
 }

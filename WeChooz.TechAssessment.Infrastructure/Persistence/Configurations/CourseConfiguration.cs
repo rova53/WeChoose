@@ -4,7 +4,7 @@ using WeChooz.TechAssessment.Domain.Courses;
 
 namespace WeChooz.TechAssessment.Infrastructure.Persistence.Configurations;
 
-public class CourseConfiguration: IEntityTypeConfiguration<Course>
+public class CourseConfiguration : IEntityTypeConfiguration<Course>
 {
     public void Configure(EntityTypeBuilder<Course> builder)
     {

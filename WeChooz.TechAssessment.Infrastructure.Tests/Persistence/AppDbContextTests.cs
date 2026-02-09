@@ -1,6 +1,6 @@
 ﻿using FluentAssertions;
 using WeChooz.TechAssessment.Domain.Courses;
-using WeChooz.TechAssessment.Domain.Participants;
+using WeChooz.TechAssessment.Domain.Users;
 using WeChooz.TechAssessment.Domain.Sessions;
 using WeChooz.TechAssessment.Infrastructure.Tests.Helpers;
 
@@ -14,26 +14,26 @@ public class AppDbContextTests
         using var context = DbContextFactory.Create();
         context.Courses.Should().NotBeNull();
     }
-    
+
     [Fact]
     public void DbContext_Should_Have_Sessions_DbSet()
     {
         using var context = DbContextFactory.Create();
         context.Sessions.Should().NotBeNull();
     }
-    
+
     [Fact]
-    public void DbContext_Should_Have_Participants_DbSet()
+    public void DbContext_Should_Have_Users_DbSet()
     {
         using var context = DbContextFactory.Create();
-        context.Participants.Should().NotBeNull();
+        context.Users.Should().NotBeNull();
     }
 
     [Fact]
     public async Task DbContext_Should_PersistCourse()
     {
         using var context = DbContextFactory.Create();
-        
+
         var course = new Course
         {
             Id = Guid.NewGuid(),
@@ -49,7 +49,7 @@ public class AppDbContextTests
 
         context.Courses.Add(course);
         await context.SaveChangesAsync();
-        
+
         var saved = await context.Courses.FindAsync(course.Id);
         saved.Should().NotBeNull();
         saved.Name.Should().Be(course.Name);
@@ -84,14 +84,14 @@ public class AppDbContextTests
         context.Courses.Add(course);
         context.Sessions.Add(session);
         await context.SaveChangesAsync();
-        
+
         var saved = await context.Sessions.FindAsync(session.Id);
         saved.Should().NotBeNull();
         saved.CourseId.Should().Be(course.Id);
     }
-    
+
     [Fact]
-    public async Task DbContext_Should_Persist_Participant_With_Session()
+    public async Task DbContext_Should_Persist_User_With_Session()
     {
         using var context = DbContextFactory.Create();
 
@@ -117,7 +117,7 @@ public class AppDbContextTests
             Course = course
         };
 
-        var participant = new Participant
+        var User = new User
         {
             Id = Guid.NewGuid(),
             SessionId = session.Id,
@@ -130,10 +130,10 @@ public class AppDbContextTests
 
         context.Courses.Add(course);
         context.Sessions.Add(session);
-        context.Participants.Add(participant);
+        context.Users.Add(User);
         await context.SaveChangesAsync();
 
-        var saved = await context.Participants.FindAsync(participant.Id);
+        var saved = await context.Users.FindAsync(User.Id);
         saved.Should().NotBeNull();
         saved!.SessionId.Should().Be(session.Id);
         saved.Email.Should().Be("pierre@test.com");

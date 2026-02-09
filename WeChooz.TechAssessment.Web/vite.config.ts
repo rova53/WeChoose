@@ -70,6 +70,7 @@ export default defineConfig(async () => {
                     quietDeps: true,
                 },
             },
+            postcss: './postcss.config.js'
         },
         build: {
             manifest: "vite.manifest.json",

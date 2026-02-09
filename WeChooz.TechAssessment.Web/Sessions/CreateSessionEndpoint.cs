@@ -16,7 +16,7 @@ public class CreateSessionEndpoint : Ardalis.ApiEndpoints
     private readonly ICourseRepository _courseRepository;
 
     public CreateSessionEndpoint(
-        ISessionRepository sessionRepository, 
+        ISessionRepository sessionRepository,
         ICourseRepository courseRepository
         )
     {
@@ -26,7 +26,7 @@ public class CreateSessionEndpoint : Ardalis.ApiEndpoints
 
     [HttpPost]
     public override async Task<ActionResult<SessionResponse>> HandleAsync(
-        [FromBody] CreateSessionRequest request, 
+        [FromBody] CreateSessionRequest request,
         CancellationToken cancellationToken = default)
     {
         var course = await _courseRepository.GetByIdAsync(request.CourseId, cancellationToken);
@@ -38,11 +38,11 @@ public class CreateSessionEndpoint : Ardalis.ApiEndpoints
             CourseId = request.CourseId,
             StarDate = request.StartDate,
             DeliveryMode = request.DeliveryMode,
-            Participants = []
+            Users = []
         };
 
         var created = await _sessionRepository.AddAsync(session, cancellationToken);
-        
+
         var result = await _sessionRepository.GetByIdAsync(created.Id, cancellationToken);
         return CreatedAtAction(nameof(GetSessionByIdEndpoint), new { id = created.Id }, SessionResponse.FromDomain(result!));
     }

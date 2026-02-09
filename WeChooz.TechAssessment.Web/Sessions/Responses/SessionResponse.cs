@@ -9,7 +9,7 @@ public class SessionResponse
     public string CourseName { get; set; } = string.Empty;
     public DateOnly StartDate { get; set; }
     public DeliveryMode DeliveryMode { get; set; }
-    public int ParticipantCount { get; set; }
+    public int UserCount { get; set; }
 
     public static SessionResponse FromDomain(Session session) => new()
     {
@@ -18,6 +18,6 @@ public class SessionResponse
         CourseName = session.Course?.Name ?? string.Empty,
         StartDate = session.StarDate,
         DeliveryMode = session.DeliveryMode,
-        ParticipantCount = session.Participants?.Count ?? 0
+        UserCount = session.Users?.Count ?? 0
     };
 }
