@@ -2,6 +2,8 @@ namespace WeChooz.TechAssessment.Tests;
 
 public class WebTests
 {
+    private const int TIMEOUT_SECONDS = 90;
+
     [Fact]
     public async Task GetWebResourceRootReturnsOkStatusCode()
     {
@@ -9,7 +11,11 @@ public class WebTests
         var appHost = await DistributedApplicationTestingBuilder.CreateAsync<Projects.WeChooz_TechAssessment_AppHost>();
         appHost.Services.ConfigureHttpClientDefaults(clientBuilder =>
         {
-            clientBuilder.AddStandardResilienceHandler();
+            clientBuilder.AddStandardResilienceHandler(o =>
+                {
+                    o.TotalRequestTimeout.Timeout = TimeSpan.FromSeconds(TIMEOUT_SECONDS);
+                }
+            );
         });
         // To output logs to the xUnit.net ITestOutputHelper, consider adding a package from https://www.nuget.org/packages?q=xunit+logging
 
