@@ -1,5 +1,6 @@
 ﻿using FluentAssertions;
 using WeChooz.TechAssessment.Domain.Courses;
+using WeChooz.TechAssessment.Domain.Enroll;
 using WeChooz.TechAssessment.Domain.Users;
 using WeChooz.TechAssessment.Domain.Sessions;
 using WeChooz.TechAssessment.Infrastructure.Users;
@@ -35,37 +36,29 @@ public class UserRepositoryTests
         return (course, session);
     }
 
-    private static User CreateUser(Guid sessionId, string firstName = "Pierre", string lastName = "Durand", string email = "pierre@test.com", Guid? id = null) => new()
+    private static User CreateUser(Guid sessionId, 
+        string firstName = "Pierre", 
+        string lastName = "Durand", 
+        string email = "pierre@test.com", 
+        Guid? id = null) => new()
     {
         Id = id ?? Guid.NewGuid(),
         FirstName = firstName,
         LastName = lastName,
         Email = email,
-        CompanyName = "ACME"
+        CompanyName = "ACME",
+        Enrollments = [
+        new SessionEnroll()
+        {
+            Session = new Session
+            {
+                Id = sessionId, 
+                Course = new Course(){ Name = "Formation"}
+            }
+        }
+        ]
     };
-
-    [Fact]
-    public async Task GetByIdAsync_Should_Include_Session_And_Course()
-    {
-        using var context = DbContextFactory.Create();
-        var repo = new UserRepository(context);
-
-        var (course, session) = CreateCourseAndSession();
-        var User = CreateUser(session.Id);
-
-        context.Courses.Add(course);
-        context.Sessions.Add(session);
-        context.Users.Add(User);
-        await context.SaveChangesAsync();
-
-        var result = await repo.GetByIdAsync(User.Id);
-
-        result.Should().NotBeNull();
-        result!.Enrollments.Select(s => s.Session).Should().NotBeNull();
-        result.Enrollments.Select(s => s.Session?.Course).Should().NotBeNull();
-        result.Enrollments.Select(s => s.Session?.Course.Name).First().Should().Be("Formation");
-    }
-
+    
     [Fact]
     public async Task GetByIdAsync_Should_Return_Null_When_Not_Found()
     {

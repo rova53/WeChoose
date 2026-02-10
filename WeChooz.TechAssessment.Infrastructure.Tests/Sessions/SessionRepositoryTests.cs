@@ -1,5 +1,6 @@
 ﻿using FluentAssertions;
 using WeChooz.TechAssessment.Domain.Courses;
+using WeChooz.TechAssessment.Domain.Enroll;
 using WeChooz.TechAssessment.Domain.Users;
 using WeChooz.TechAssessment.Domain.Sessions;
 using WeChooz.TechAssessment.Infrastructure.Sessions;
@@ -27,7 +28,8 @@ public class SessionRepositoryTests
         Id = id ?? Guid.NewGuid(),
         CourseId = courseId,
         StarDate = date ?? DateOnly.FromDateTime(DateTime.UtcNow.AddDays(30)),
-        DeliveryMode = mode
+        DeliveryMode = mode,
+        Enrollments = [ new SessionEnroll() { User = CreateUser(id ?? Guid.NewGuid()) }]
     };
 
     private static User CreateUser(Guid sessionId, string email = "test@test.com", Guid? id = null) => new()
