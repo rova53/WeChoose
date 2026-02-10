@@ -31,7 +31,6 @@ public class UpdateUserEndpointTests
         var existing = new User
         {
             Id = UserId,
-            SessionId = sessionId,
             LastName = "Ancien",
             FirstName = "Nom",
             Email = "ancien@email.com",
@@ -134,7 +133,6 @@ public class UpdateUserEndpointTests
         var existing = new User
         {
             Id = UserId,
-            SessionId = oldSessionId,
             LastName = "Dupont",
             FirstName = "Jean",
             Email = "jean@email.com",
@@ -156,7 +154,7 @@ public class UpdateUserEndpointTests
             Id = newSessionId,
             StarDate = new DateOnly(2026, 3, 1),
             DeliveryMode = DeliveryMode.Remote,
-            Users = []
+            Enrollments = []
         };
 
         _UserRepository
@@ -191,7 +189,6 @@ public class UpdateUserEndpointTests
         var existing = new User
         {
             Id = UserId,
-            SessionId = oldSessionId,
             LastName = "Dupont",
             FirstName = "Jean",
             Email = "jean@email.com",
@@ -235,7 +232,6 @@ public class UpdateUserEndpointTests
         var existing = new User
         {
             Id = UserId,
-            SessionId = oldSessionId,
             LastName = "Test",
             FirstName = "Test",
             Email = "test@test.com",
@@ -279,7 +275,6 @@ public class UpdateUserEndpointTests
         var existing = new User
         {
             Id = UserId,
-            SessionId = sessionId,
             LastName = "Test",
             FirstName = "Test",
             Email = "test@test.com",
@@ -323,7 +318,6 @@ public class UpdateUserEndpointTests
         var existing = new User
         {
             Id = UserId,
-            SessionId = sessionId,
             LastName = "Old",
             FirstName = "Old",
             Email = "old@test.com",
@@ -356,7 +350,6 @@ public class UpdateUserEndpointTests
             .Received(1)
             .UpdateAsync(Arg.Is<User>(p =>
                 p.Id == UserId &&
-                p.SessionId == request.SessionId &&
                 p.LastName == request.LastName &&
                 p.FirstName == request.FirstName &&
                 p.Email == request.Email &&
@@ -405,7 +398,6 @@ public class UpdateUserEndpointTests
         var existing = new User
         {
             Id = UserId,
-            SessionId = oldSessionId,
             LastName = "Test",
             FirstName = "Test",
             Email = "test@test.com",
@@ -452,7 +444,6 @@ public class UpdateUserEndpointTests
         var existing = new User
         {
             Id = UserId,
-            SessionId = sessionId,
             LastName = "Test",
             FirstName = "Test",
             Email = "test@test.com",
@@ -499,7 +490,6 @@ public class UpdateUserEndpointTests
         var existing = new User
         {
             Id = UserId,
-            SessionId = sessionId,
             LastName = "Original",
             FirstName = "Original",
             Email = "original@test.com",

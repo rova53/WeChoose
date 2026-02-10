@@ -1,6 +1,7 @@
 ﻿using Microsoft.AspNetCore.Mvc;
 using NSubstitute;
 using WeChooz.TechAssessment.Domain.Courses;
+using WeChooz.TechAssessment.Domain.Enroll;
 using WeChooz.TechAssessment.Domain.Users;
 using WeChooz.TechAssessment.Domain.Sessions;
 using WeChooz.TechAssessment.Web.Users;
@@ -44,7 +45,7 @@ public class CreateUserEndpointTests
                 TrainerFirstName = "Jean",
                 TrainerLastName = "Dupont"
             },
-            Users = []
+            Enrollments = []
         };
 
         var request = new CreateUserRequest
@@ -153,11 +154,34 @@ public class CreateUserEndpointTests
                 TrainerFirstName = "A",
                 TrainerLastName = "B"
             },
-            Users = new List<User>
-            {
-                new() { Id = Guid.NewGuid(), SessionId = sessionId, LastName = "P1", FirstName = "F1", Email = "p1@test.com", CompanyName = "C1" },
-                new() { Id = Guid.NewGuid(), SessionId = sessionId, LastName = "P2", FirstName = "F2", Email = "p2@test.com", CompanyName = "C2" }
-            }
+            Enrollments = [
+                new SessionEnroll()
+                {
+                    Id = Guid.NewGuid(),
+                    SessionId = sessionId,
+                    User = new()
+                    {
+                        Id = Guid.NewGuid(), 
+                        LastName = "P1", 
+                        FirstName = "F1", 
+                        Email = "p1@test.com", 
+                        CompanyName = "C1"
+                    }
+                },
+                new SessionEnroll()
+                {
+                    Id = Guid.NewGuid(),
+                    SessionId = sessionId,
+                    User = new()
+                    {
+                        Id = Guid.NewGuid(), 
+                        LastName = "P2", 
+                        FirstName = "F2", 
+                        Email = "p2@test.com", 
+                        CompanyName = "C2"
+                    }
+                }
+            ]
         };
 
         var request = new CreateUserRequest
@@ -203,10 +227,21 @@ public class CreateUserEndpointTests
                 TrainerFirstName = "A",
                 TrainerLastName = "B"
             },
-            Users = new List<User>
-            {
-                new() { Id = Guid.NewGuid(), SessionId = sessionId, LastName = "P1", FirstName = "F1", Email = "p1@test.com", CompanyName = "C1" }
-            }
+            Enrollments = [
+                new SessionEnroll()
+                {
+                    Id = Guid.NewGuid(),
+                    SessionId = sessionId,
+                    User = new()
+                    {
+                        Id = Guid.NewGuid(), 
+                        LastName = "P1", 
+                        FirstName = "F1", 
+                        Email = "p1@test.com", 
+                        CompanyName = "C1"
+                    }
+                }
+            ]
         };
 
         var request = new CreateUserRequest
@@ -253,10 +288,21 @@ public class CreateUserEndpointTests
                 TrainerFirstName = "A",
                 TrainerLastName = "B"
             },
-            Users = new List<User>
-            {
-                new() { Id = Guid.NewGuid(), SessionId = sessionId, LastName = "P1", FirstName = "F1", Email = "p1@test.com", CompanyName = "C1" }
-            }
+            Enrollments = [
+                new SessionEnroll()
+                {
+                    Id = Guid.NewGuid(),
+                    SessionId = sessionId,
+                    User = new()
+                    {
+                        Id = Guid.NewGuid(), 
+                        LastName = "P1", 
+                        FirstName = "F1", 
+                        Email = "p1@test.com", 
+                        CompanyName = "C1"
+                    }
+                }
+            ]
         };
 
         var request = new CreateUserRequest
@@ -295,10 +341,21 @@ public class CreateUserEndpointTests
             StarDate = new DateOnly(2026, 3, 1),
             DeliveryMode = DeliveryMode.Remote,
             Course = null!,
-            Users = new List<User>
-            {
-                new() { Id = Guid.NewGuid(), SessionId = sessionId, LastName = "P1", FirstName = "F1", Email = "p1@test.com", CompanyName = "C1" }
-            }
+            Enrollments = [
+                new SessionEnroll()
+                {
+                    Id = Guid.NewGuid(),
+                    SessionId = sessionId,
+                    User = new()
+                    {
+                        Id = Guid.NewGuid(), 
+                        LastName = "P1", 
+                        FirstName = "F1", 
+                        Email = "p1@test.com", 
+                        CompanyName = "C1"
+                    }
+                }
+            ]
         };
 
         var request = new CreateUserRequest
@@ -348,7 +405,7 @@ public class CreateUserEndpointTests
                 TrainerFirstName = "A",
                 TrainerLastName = "B"
             },
-            Users = []
+            Enrollments = []
         };
 
         var request = new CreateUserRequest
@@ -375,7 +432,6 @@ public class CreateUserEndpointTests
         await _UserRepository
             .Received(1)
             .AddAsync(Arg.Is<User>(p =>
-                p.SessionId == request.SessionId &&
                 p.LastName == request.LastName &&
                 p.FirstName == request.FirstName &&
                 p.Email == request.Email &&
@@ -406,7 +462,7 @@ public class CreateUserEndpointTests
                 TrainerFirstName = "A",
                 TrainerLastName = "B"
             },
-            Users = []
+            Enrollments = []
         };
 
         var request = new CreateUserRequest
@@ -490,7 +546,7 @@ public class CreateUserEndpointTests
                 TrainerFirstName = "A",
                 TrainerLastName = "B"
             },
-            Users = []
+            Enrollments = []
         };
 
         var request = new CreateUserRequest

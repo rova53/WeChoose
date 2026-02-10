@@ -12,7 +12,6 @@ public class UserResponseTests
         var User = new User
         {
             Id = Guid.NewGuid(),
-            SessionId = Guid.NewGuid(),
             LastName = "Dupont",
             FirstName = "Jean",
             Email = "jean.dupont@email.com",
@@ -24,7 +23,6 @@ public class UserResponseTests
 
         // Assert
         Assert.Equal(User.Id, response.Id);
-        Assert.Equal(User.SessionId, response.SessionId);
         Assert.Equal(User.LastName, response.LastName);
         Assert.Equal(User.FirstName, response.FirstName);
         Assert.Equal(User.Email, response.Email);
@@ -38,7 +36,6 @@ public class UserResponseTests
         var User = new User
         {
             Id = Guid.NewGuid(),
-            SessionId = Guid.NewGuid(),
             LastName = string.Empty,
             FirstName = string.Empty,
             Email = string.Empty,
@@ -62,7 +59,6 @@ public class UserResponseTests
         var User = new User
         {
             Id = Guid.Empty,
-            SessionId = Guid.Empty,
             LastName = "Test",
             FirstName = "Test",
             Email = "test@test.com",
@@ -84,7 +80,6 @@ public class UserResponseTests
         var User = new User
         {
             Id = Guid.NewGuid(),
-            SessionId = Guid.NewGuid(),
             LastName = "Martin",
             FirstName = "Marie",
             Email = "marie.martin@email.com",
@@ -114,7 +109,6 @@ public class UserResponseTests
         var User = new User
         {
             Id = originalId,
-            SessionId = originalSessionId,
             LastName = "Leroy",
             FirstName = "Pierre",
             Email = "pierre.leroy@email.com",
@@ -126,7 +120,6 @@ public class UserResponseTests
 
         // Assert
         Assert.Equal(originalId, User.Id);
-        Assert.Equal(originalSessionId, User.SessionId);
         Assert.Equal("Leroy", User.LastName);
         Assert.Equal("Pierre", User.FirstName);
         Assert.Equal("pierre.leroy@email.com", User.Email);
@@ -143,7 +136,6 @@ public class UserResponseTests
         var User = new User
         {
             Id = Guid.NewGuid(),
-            SessionId = Guid.NewGuid(),
             LastName = "Test",
             FirstName = "Test",
             Email = email,

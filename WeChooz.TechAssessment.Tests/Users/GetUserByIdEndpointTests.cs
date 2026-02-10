@@ -25,7 +25,6 @@ public class GetUserByIdEndpointTests
         var User = new User
         {
             Id = UserId,
-            SessionId = Guid.NewGuid(),
             LastName = "Dupont",
             FirstName = "Jean",
             Email = "jean.dupont@email.com",
@@ -44,7 +43,6 @@ public class GetUserByIdEndpointTests
         var response = Assert.IsType<UserResponse>(okResult.Value);
 
         Assert.Equal(User.Id, response.Id);
-        Assert.Equal(User.SessionId, response.SessionId);
         Assert.Equal(User.LastName, response.LastName);
         Assert.Equal(User.FirstName, response.FirstName);
         Assert.Equal(User.Email, response.Email);

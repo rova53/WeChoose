@@ -12,9 +12,10 @@ public class SessionResponseTests
     {
         // Arrange
         var courseId = Guid.NewGuid();
+        var sessionId = Guid.NewGuid();
         var session = new Session
         {
-            Id = Guid.NewGuid(),
+            Id = sessionId,
             CourseId = courseId,
             StarDate = new DateOnly(2026, 6, 15),
             DeliveryMode = DeliveryMode.Remote,
@@ -30,11 +31,28 @@ public class SessionResponseTests
                 TrainerFirstName = "Jean",
                 TrainerLastName = "Dupont"
             },
-            Users = new List<User>
-            {
-                new() { Id = Guid.NewGuid(), SessionId = Guid.NewGuid(), LastName = "P1", FirstName = "F1", Email = "p1@test.com", CompanyName = "C1" },
-                new() { Id = Guid.NewGuid(), SessionId = Guid.NewGuid(), LastName = "P2", FirstName = "F2", Email = "p2@test.com", CompanyName = "C2" }
-            }
+            Enrollments = [
+             new()
+             {
+                 Id = Guid.NewGuid(), 
+                 SessionId = sessionId, 
+                 User = new()
+                 {
+                     Id = Guid.NewGuid(), 
+                     LastName = "P1", FirstName = "F1", Email = "p1@test.com", CompanyName = "C1"
+                 },
+             },
+             new()
+             {
+                 Id = Guid.NewGuid(),
+                 SessionId = sessionId, 
+                 User = new()
+                 {
+                     Id = Guid.NewGuid(), 
+                     LastName = "P2", FirstName = "F2", Email = "p2@test.com", CompanyName = "C2"
+                 },
+             }
+            ]
         };
 
         // Act
@@ -60,7 +78,7 @@ public class SessionResponseTests
             StarDate = new DateOnly(2026, 3, 1),
             DeliveryMode = DeliveryMode.InPerson,
             Course = null!,
-            Users = []
+            Enrollments = []
         };
 
         // Act
@@ -92,7 +110,7 @@ public class SessionResponseTests
                 TrainerFirstName = "A",
                 TrainerLastName = "B"
             },
-            Users = null!
+            Enrollments = null!
         };
 
         // Act
@@ -124,7 +142,7 @@ public class SessionResponseTests
                 TrainerFirstName = "A",
                 TrainerLastName = "B"
             },
-            Users = []
+            Enrollments = []
         };
 
         // Act
@@ -145,7 +163,7 @@ public class SessionResponseTests
             StarDate = default,
             DeliveryMode = DeliveryMode.Remote,
             Course = null!,
-            Users = []
+            Enrollments = []
         };
 
         // Act
@@ -179,7 +197,7 @@ public class SessionResponseTests
                 TrainerFirstName = "A",
                 TrainerLastName = "B"
             },
-            Users = []
+            Enrollments = []
         };
 
         // Act
@@ -209,7 +227,7 @@ public class SessionResponseTests
             StarDate = new DateOnly(2026, 8, 1),
             DeliveryMode = deliveryMode,
             Course = null!,
-            Users = []
+            Enrollments = []
         };
 
         // Act

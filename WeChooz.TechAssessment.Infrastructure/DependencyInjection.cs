@@ -1,9 +1,11 @@
 ﻿using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
 using WeChooz.TechAssessment.Domain.Courses;
+using WeChooz.TechAssessment.Domain.Enroll;
 using WeChooz.TechAssessment.Domain.Users;
 using WeChooz.TechAssessment.Domain.Sessions;
 using WeChooz.TechAssessment.Infrastructure.Courses;
+using WeChooz.TechAssessment.Infrastructure.Enroll;
 using WeChooz.TechAssessment.Infrastructure.Users;
 using WeChooz.TechAssessment.Infrastructure.Persistence;
 using WeChooz.TechAssessment.Infrastructure.Sessions;
@@ -18,6 +20,7 @@ public static class DependencyInjection
         services.AddScoped<ICourseRepository, CourseRepository>();
         services.AddScoped<ISessionRepository, SessionRepository>();
         services.AddScoped<IUserRepository, UserRepository>();
+        services.AddScoped<ISessionEnrollRepository, SessionEnrollRepository>();
 
         return services;
     }

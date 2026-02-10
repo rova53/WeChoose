@@ -44,10 +44,14 @@ public class GetAllSessionsEndpointTests
                     TrainerFirstName = "Jean",
                     TrainerLastName = "Dupont"
                 },
-                Users = new List<User>
-                {
-                    new() { Id = Guid.NewGuid(), SessionId = courseId, LastName = "P1", FirstName = "F1", Email = "p1@test.com", CompanyName = "C1" }
-                }
+                Enrollments = [
+                    new()
+                    {
+                        Id = Guid.NewGuid(),
+                        SessionId = courseId,
+                        UserId = Guid.NewGuid(),
+                    }
+                ],
             },
             new()
             {
@@ -67,7 +71,7 @@ public class GetAllSessionsEndpointTests
                     TrainerFirstName = "Marie",
                     TrainerLastName = "Martin"
                 },
-                Users = []
+                Enrollments = []
             }
         };
 
@@ -169,7 +173,7 @@ public class GetAllSessionsEndpointTests
                 TrainerFirstName = "Pierre",
                 TrainerLastName = "Durand"
             },
-            Users = []
+            Enrollments = []
         };
 
         _sessionRepository

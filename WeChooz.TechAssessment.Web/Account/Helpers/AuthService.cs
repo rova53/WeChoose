@@ -4,7 +4,7 @@ namespace WeChooz.TechAssessment.Web.Account.Helpers;
 
 public interface IAuthService
 {
-    Task<(bool success, PolicyRoles roles)> ValidateCredentials(string username, string password);
+    Task<(bool success, User)> ValidateCredentials(string username, string password);
 }
 
 public class AuthService : IAuthService
@@ -16,11 +16,11 @@ public class AuthService : IAuthService
         _userRepository = userRepository;
     }
 
-    public async Task<(bool success, PolicyRoles roles)> ValidateCredentials(string username, string password)
+    public async Task<(bool success, User)> ValidateCredentials(string username, string password)
     {
         var user = await _userRepository.FindByEmail(username);
         if (BC.Verify(password, user?.Password))
-            return (true, user.Role);
-        return (false, PolicyRoles.None);
+            return (true, user);
+        return (false, null);
     }
 }

@@ -1,4 +1,6 @@
 import React from 'react';
+import { TargetAudience, targetAudienceLabels } from '../../services/courses/TargetAudience';
+import { DeliveryMode, deliveryModeLabels } from '../../services/sessions/DeliveryMode';
 
 // Interface pour typer les filtres
 export interface SessionFilters {
@@ -56,8 +58,13 @@ const FilterSidebar = ({ filters, setFilters }: FilterSidebarProps) => {
                         className="w-full p-2 bg-gray-50 border border-gray-200 rounded-lg text-sm focus:ring-2 focus:ring-blue-500 outline-none"
                     >
                         <option value="">Toutes les populations</option>
-                        <option value="Élu">Élu</option>
-                        <option value="Président de CSE">Président de CSE</option>
+                        {Object.values(TargetAudience)
+                            .filter(v => typeof v === 'number')
+                            .map((value) => (
+                                <option key={value} value={value}>
+                                    {targetAudienceLabels[value as TargetAudience]}
+                                </option>
+                            ))}
                     </select>
                 </div>
 
@@ -67,19 +74,23 @@ const FilterSidebar = ({ filters, setFilters }: FilterSidebarProps) => {
                         Mode de délivrance
                     </label>
                     <div className="space-y-2">
-                        {['Présentiel', 'À distance'].map((mode) => (
-                            <label key={mode} className="flex items-center text-sm cursor-pointer group">
-                                <input
-                                    type="radio"
-                                    name="mode"
-                                    value={mode}
-                                    checked={filters.mode === mode}
-                                    onChange={handleChange}
-                                    className="w-4 h-4 text-blue-600 border-gray-300 focus:ring-blue-500"
-                                />
-                                <span className="ml-2 text-gray-600 group-hover:text-gray-900">{mode}</span>
-                            </label>
-                        ))}
+                        {Object.values(DeliveryMode)
+                            .filter(v => typeof v === 'number')
+                            .map((value) => (
+                                <label key={value} className="flex items-center text-sm cursor-pointer group">
+                                    <input
+                                        type="radio"
+                                        name="mode"
+                                        value={value}
+                                        checked={filters.mode === String(value)}
+                                        onChange={handleChange}
+                                        className="w-4 h-4 text-blue-600 border-gray-300 focus:ring-blue-500"
+                                    />
+                                    <span className="ml-2 text-gray-600 group-hover:text-gray-900">
+                                        {deliveryModeLabels[value as DeliveryMode]}
+                                    </span>
+                                </label>
+                            ))}
                     </div>
                 </div>
 

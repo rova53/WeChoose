@@ -38,7 +38,6 @@ public class UserRepositoryTests
     private static User CreateUser(Guid sessionId, string firstName = "Pierre", string lastName = "Durand", string email = "pierre@test.com", Guid? id = null) => new()
     {
         Id = id ?? Guid.NewGuid(),
-        SessionId = sessionId,
         FirstName = firstName,
         LastName = lastName,
         Email = email,
@@ -62,9 +61,9 @@ public class UserRepositoryTests
         var result = await repo.GetByIdAsync(User.Id);
 
         result.Should().NotBeNull();
-        result!.Session.Should().NotBeNull();
-        result.Session.Course.Should().NotBeNull();
-        result.Session.Course.Name.Should().Be("Formation");
+        result!.Enrollments.Select(s => s.Session).Should().NotBeNull();
+        result.Enrollments.Select(s => s.Session?.Course).Should().NotBeNull();
+        result.Enrollments.Select(s => s.Session?.Course.Name).First().Should().Be("Formation");
     }
 
     [Fact]
@@ -121,7 +120,7 @@ public class UserRepositoryTests
         var result = (await repo.GetAllAsync()).ToList();
 
         result.Should().HaveCount(1);
-        result[0].Session.Should().NotBeNull();
+        result[0].Enrollments.Select(s => s.Session).Should().NotBeNull();
     }
 
     [Fact]
@@ -151,7 +150,6 @@ public class UserRepositoryTests
 
         result.Should().NotBeNull();
         result.Email.Should().Be("pierre@test.com");
-        result.SessionId.Should().Be(session.Id);
     }
 
     [Fact]

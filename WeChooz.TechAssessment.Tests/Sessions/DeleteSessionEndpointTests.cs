@@ -27,7 +27,7 @@ public class DeleteSessionEndpointTests
             CourseId = Guid.NewGuid(),
             StarDate = new DateOnly(2026, 6, 15),
             DeliveryMode = DeliveryMode.Remote,
-            Users = []
+            Enrollments = []
         };
 
         _sessionRepository
@@ -88,7 +88,7 @@ public class DeleteSessionEndpointTests
             CourseId = Guid.NewGuid(),
             StarDate = new DateOnly(2026, 6, 15),
             DeliveryMode = DeliveryMode.Remote,
-            Users = []
+            Enrollments = []
         };
 
         _sessionRepository
@@ -141,7 +141,7 @@ public class DeleteSessionEndpointTests
                 CourseId = Guid.NewGuid(),
                 StarDate = new DateOnly(2026, 6, 15),
                 DeliveryMode = DeliveryMode.Remote,
-                Users = []
+                Enrollments = []
             });
 
         // Act

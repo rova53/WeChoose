@@ -12,8 +12,6 @@ public class UserConfiguration : IEntityTypeConfiguration<User>
 
         builder.HasKey(p => p.Id);
 
-        builder.Property(p => p.SessionId);
-
         builder.Property(p => p.FirstName)
             .IsRequired()
             .HasMaxLength(100);
@@ -35,10 +33,5 @@ public class UserConfiguration : IEntityTypeConfiguration<User>
         builder.Property(p => p.Role);
 
         builder.HasIndex(p => p.Email);
-
-        builder.HasOne(p => p.Session)
-            .WithMany(s => s.Users)
-            .HasForeignKey(p => p.SessionId)
-            .OnDelete(DeleteBehavior.Cascade);
     }
 }

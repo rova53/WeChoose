@@ -39,7 +39,7 @@ public class AccountController : Controller
     [HttpPost]
     [AllowAnonymous]
     [ValidateAntiForgeryToken]
-    public async Task<IActionResult> Login(LoginRequest model, string returnUrl = null)
+    public async Task<IActionResult> Login(LoginRequest model, string returnUrl = "/")
     {
         var r = Request;
         ViewData["ReturnUrl"] = returnUrl;
@@ -48,7 +48,7 @@ public class AccountController : Controller
         {
             try
             {
-                var (success, roles) = await _authService
+                var (success, user) = await _authService
                     .ValidateCredentials(model.Username, model.Password);
 
                 if (success)
@@ -56,12 +56,13 @@ public class AccountController : Controller
                     var claims = new List<Claim>
                     {
                         new Claim(ClaimTypes.Name, model.Username),
+                        new(ClaimTypes.NameIdentifier, user.Id.ToString()),
                         new Claim("LastLoginTime", DateTime.UtcNow.ToString())
                     };
                     
                     claims.AddRange(
                         Enum.GetValues<PolicyRoles>()
-                            .Where(role => role != PolicyRoles.None && roles.HasFlag(role)) 
+                            .Where(role => role != PolicyRoles.None && user.Role.HasFlag(role)) 
                             .Select(role => new Claim(ClaimTypes.Role, role.ToString()))
                     );
 

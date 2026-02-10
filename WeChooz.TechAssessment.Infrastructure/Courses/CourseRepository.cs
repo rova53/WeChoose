@@ -15,7 +15,8 @@ public class CourseRepository : BaseRepository<Course>, ICourseRepository
     {
         return await DbSet
             .Include(c => c.Sessions)
-            .ThenInclude(s => s.Users)
+            .ThenInclude(s => s.Enrollments)
+            .ThenInclude(e => e.User)
             .FirstOrDefaultAsync(c => c.Id == id, cancellationToken);
     }
 

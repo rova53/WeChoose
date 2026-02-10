@@ -4,6 +4,8 @@ import FilterSidebar, { SessionFilters } from '../components/FilterSidebar';
 import SessionCard from '../components/SessionCard';
 import SessionDetailModal from '../components/SessionDetailModal';
 import { useCurrentUser } from '../../hooks/auth/useCurrentUser';
+import { TargetAudience } from '../../services/courses/TargetAudience';
+import { DeliveryMode } from '../../services/sessions/DeliveryMode';
 // If you have login/logout functions, import them here, e.g.:
 // import { useAuth } from '../../hooks/auth/useAuth';
 
@@ -24,10 +26,11 @@ const PublicCatalogPage = () => {
     });
 
     const filteredSessions = useMemo(() => {
+        console.log("sessions dans filteredSessions:", filters);
         if (!sessions) return [];
         return sessions.filter(session => {
-            const matchPopulation = !filters.population || session.course.targetAudience === filters.population;
-            const matchMode = !filters.mode || session.deliveryMode === filters.mode;
+            const matchPopulation = !filters.population || Number(filters.population) as TargetAudience === session.course.targetAudience;
+            const matchMode = !filters.mode || session.deliveryMode === Number(filters.mode) as DeliveryMode;
 
             let matchDate = true;
             const sessionDate = new Date(session.startDate).getTime();

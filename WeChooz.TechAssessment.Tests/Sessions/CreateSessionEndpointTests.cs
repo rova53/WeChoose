@@ -55,7 +55,7 @@ public class CreateSessionEndpointTests
             CourseId = courseId,
             StarDate = request.StartDate,
             DeliveryMode = request.DeliveryMode,
-            Users = []
+            Enrollments = []
         };
 
         var fetchedSession = new Session
@@ -65,7 +65,7 @@ public class CreateSessionEndpointTests
             StarDate = request.StartDate,
             DeliveryMode = request.DeliveryMode,
             Course = course,
-            Users = []
+            Enrollments = []
         };
 
         _courseRepository
@@ -193,7 +193,7 @@ public class CreateSessionEndpointTests
                 StarDate = request.StartDate,
                 DeliveryMode = request.DeliveryMode,
                 Course = course,
-                Users = []
+                Enrollments = []
             });
 
         // Act
@@ -206,7 +206,7 @@ public class CreateSessionEndpointTests
                 s.CourseId == request.CourseId &&
                 s.StarDate == request.StartDate &&
                 s.DeliveryMode == request.DeliveryMode &&
-                s.Users.Count == 0
+                s.Enrollments.Count == 0
             ), Arg.Any<CancellationToken>());
     }
 
@@ -250,7 +250,7 @@ public class CreateSessionEndpointTests
                 CourseId = courseId,
                 StarDate = request.StartDate,
                 DeliveryMode = request.DeliveryMode,
-                Users = []
+                Enrollments = []
             });
 
         _sessionRepository
@@ -262,7 +262,7 @@ public class CreateSessionEndpointTests
                 StarDate = request.StartDate,
                 DeliveryMode = request.DeliveryMode,
                 Course = course,
-                Users = []
+                Enrollments = []
             });
 
         // Act
@@ -314,7 +314,7 @@ public class CreateSessionEndpointTests
                 CourseId = courseId,
                 StarDate = request.StartDate,
                 DeliveryMode = request.DeliveryMode,
-                Users = []
+                Enrollments = []
             });
 
         _sessionRepository
@@ -326,7 +326,7 @@ public class CreateSessionEndpointTests
                 StarDate = request.StartDate,
                 DeliveryMode = request.DeliveryMode,
                 Course = course,
-                Users = []
+                Enrollments = []
             });
 
         // Act
@@ -408,7 +408,7 @@ public class CreateSessionEndpointTests
                 CourseId = courseId,
                 StarDate = request.StartDate,
                 DeliveryMode = request.DeliveryMode,
-                Users = []
+                Enrollments = []
             });
 
         _sessionRepository
@@ -420,7 +420,7 @@ public class CreateSessionEndpointTests
                 StarDate = request.StartDate,
                 DeliveryMode = request.DeliveryMode,
                 Course = course,
-                Users = []
+                Enrollments = []
             });
 
         // Act
@@ -474,7 +474,7 @@ public class CreateSessionEndpointTests
                 CourseId = courseId,
                 StarDate = request.StartDate,
                 DeliveryMode = deliveryMode,
-                Users = []
+                Enrollments = []
             });
 
         _sessionRepository
@@ -486,7 +486,7 @@ public class CreateSessionEndpointTests
                 StarDate = request.StartDate,
                 DeliveryMode = deliveryMode,
                 Course = course,
-                Users = []
+                Enrollments = []
             });
 
         // Act

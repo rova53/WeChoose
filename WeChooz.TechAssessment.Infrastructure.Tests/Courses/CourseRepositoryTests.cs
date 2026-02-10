@@ -1,5 +1,6 @@
 ﻿using FluentAssertions;
 using WeChooz.TechAssessment.Domain.Courses;
+using WeChooz.TechAssessment.Domain.Enroll;
 using WeChooz.TechAssessment.Domain.Users;
 using WeChooz.TechAssessment.Domain.Sessions;
 using WeChooz.TechAssessment.Infrastructure.Courses;
@@ -33,7 +34,6 @@ public class CourseRepositoryTests
     private static User CreateUser(Guid sessionId, Guid? id = null) => new()
     {
         Id = id ?? Guid.NewGuid(),
-        SessionId = sessionId,
         FirstName = "Pierre",
         LastName = "Martin",
         Email = "pierre@test.com",
@@ -69,7 +69,7 @@ public class CourseRepositoryTests
         var course = CreateCourse();
         var session = CreateSession(course.Id);
         var User = CreateUser(session.Id);
-        session.Users = [User];
+        session.Enrollments.Add(new SessionEnroll());
         course.Sessions = [session];
 
         context.Courses.Add(course);
@@ -79,8 +79,9 @@ public class CourseRepositoryTests
 
         result.Should().NotBeNull();
         result!.Sessions.Should().HaveCount(1);
-        result.Sessions.First().Users.Should().HaveCount(1);
-        result.Sessions.First().Users.First().Email.Should().Be("pierre@test.com");
+        result.Sessions.First().Enrollments.Select(u => u.User).Should().HaveCount(1);
+        result.Sessions.First().Enrollments.Select(u => u.User)
+            .First().Email.Should().Be("pierre@test.com");
     }
     [Fact]
     public async Task GetByIdAsync_Should_Return_Null_When_Not_Found()

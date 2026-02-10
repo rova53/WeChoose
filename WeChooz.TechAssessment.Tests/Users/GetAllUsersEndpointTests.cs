@@ -27,7 +27,6 @@ public class GetAllUsersEndpointTests
             new()
             {
                 Id = Guid.NewGuid(),
-                SessionId = sessionId,
                 LastName = "Dupont",
                 FirstName = "Jean",
                 Email = "jean.dupont@email.com",
@@ -36,7 +35,6 @@ public class GetAllUsersEndpointTests
             new()
             {
                 Id = Guid.NewGuid(),
-                SessionId = sessionId,
                 LastName = "Martin",
                 FirstName = "Marie",
                 Email = "marie.martin@email.com",
@@ -126,7 +124,6 @@ public class GetAllUsersEndpointTests
         var User = new User
         {
             Id = Guid.NewGuid(),
-            SessionId = Guid.NewGuid(),
             LastName = "Leroy",
             FirstName = "Pierre",
             Email = "pierre.leroy@email.com",
@@ -145,7 +142,6 @@ public class GetAllUsersEndpointTests
         var response = Assert.IsAssignableFrom<IEnumerable<UserResponse>>(okResult.Value).Single();
 
         Assert.Equal(User.Id, response.Id);
-        Assert.Equal(User.SessionId, response.SessionId);
         Assert.Equal(User.LastName, response.LastName);
         Assert.Equal(User.FirstName, response.FirstName);
         Assert.Equal(User.Email, response.Email);

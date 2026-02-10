@@ -29,9 +29,5 @@ public class SessionConfiguration : IEntityTypeConfiguration<Session>
             .HasForeignKey(s => s.CourseId)
             .OnDelete(DeleteBehavior.Cascade);
 
-        builder.HasMany(s => s.Users)
-            .WithOne(p => p.Session)
-            .HasForeignKey(p => p.SessionId)
-            .OnDelete(DeleteBehavior.Cascade);
     }
 }
