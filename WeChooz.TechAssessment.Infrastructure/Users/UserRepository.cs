@@ -38,4 +38,11 @@ public class UserRepository : BaseRepository<User>, IUserRepository
     {
         throw new NotImplementedException();
     }
+
+    public Task<User?> FindByEmail(string email, CancellationToken cancellationToken = default)
+    {
+        return DbSet
+            .AsNoTracking()
+            .FirstOrDefaultAsync(p => p.Email == email, cancellationToken);
+    }
 }

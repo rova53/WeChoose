@@ -12,8 +12,7 @@ public class UserConfiguration : IEntityTypeConfiguration<User>
 
         builder.HasKey(p => p.Id);
 
-        builder.Property(p => p.SessionId)
-            .IsRequired();
+        builder.Property(p => p.SessionId);
 
         builder.Property(p => p.FirstName)
             .IsRequired()
@@ -32,7 +31,8 @@ public class UserConfiguration : IEntityTypeConfiguration<User>
             .HasMaxLength(200);
 
         builder.Property(p => p.Password)
-            .HasMaxLength(200);
+            .HasMaxLength(500);
+        builder.Property(p => p.Role);
 
         builder.HasIndex(p => p.Email);
 

@@ -3,6 +3,7 @@ using System;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using WeChooz.TechAssessment.Infrastructure.Persistence;
 
@@ -11,9 +12,11 @@ using WeChooz.TechAssessment.Infrastructure.Persistence;
 namespace WeChooz.TechAssessment.Infrastructure.Persistence.Migrations
 {
     [DbContext(typeof(AppDbContext))]
-    partial class AppDbContextModelSnapshot : ModelSnapshot
+    [Migration("20260209202437_add_user_role")]
+    partial class add_user_role
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -121,13 +124,13 @@ namespace WeChooz.TechAssessment.Infrastructure.Persistence.Migrations
 
                     b.Property<string>("Password")
                         .IsRequired()
-                        .HasMaxLength(500)
-                        .HasColumnType("nvarchar(500)");
+                        .HasMaxLength(200)
+                        .HasColumnType("nvarchar(200)");
 
                     b.Property<int>("Role")
                         .HasColumnType("int");
 
-                    b.Property<Guid?>("SessionId")
+                    b.Property<Guid>("SessionId")
                         .HasColumnType("uniqueidentifier");
 
                     b.HasKey("Id");
@@ -155,7 +158,8 @@ namespace WeChooz.TechAssessment.Infrastructure.Persistence.Migrations
                     b.HasOne("WeChooz.TechAssessment.Domain.Sessions.Session", "Session")
                         .WithMany("Users")
                         .HasForeignKey("SessionId")
-                        .OnDelete(DeleteBehavior.Cascade);
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
 
                     b.Navigation("Session");
                 });
