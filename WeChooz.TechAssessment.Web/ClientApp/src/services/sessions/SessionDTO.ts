@@ -1,11 +1,12 @@
 import { CourseDTO } from "../courses/CourseDTO";
+import { DeliveryMode } from "./DeliveryMode";
 
 export interface SessionDTO {
     id: string;
     courseId: string;
     courseName: string;
-    startDate: string; // DateOnly côté C#, string (ISO) côté JS
-    deliveryMode: string; // ou number si l'API renvoie la valeur numérique de l'enum
+    startDate: string;
+    deliveryMode: DeliveryMode;
     UserCount: number;
     course: CourseDTO;
 }

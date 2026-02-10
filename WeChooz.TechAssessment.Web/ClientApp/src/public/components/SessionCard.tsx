@@ -1,3 +1,5 @@
+import { TargetAudience, targetAudienceLabels } from '../../services/courses/TargetAudience';
+import { DeliveryMode, deliveryModeLabels } from '../../services/sessions/DeliveryMode';
 import { SessionDTO } from '../../services/sessions/SessionDTO';
 
 interface SessionCardProps {
@@ -6,6 +8,7 @@ interface SessionCardProps {
 }
 
 const SessionCard = ({ session, onViewDetails }: SessionCardProps) => {
+    console.log("session dans SessionCard:", session);
     // Formater la date proprement
     const formattedDate = new Date(session.startDate).toLocaleDateString('fr-FR', {
         day: 'numeric',
@@ -16,19 +19,19 @@ const SessionCard = ({ session, onViewDetails }: SessionCardProps) => {
     return (
         <div className="bg-white border border-gray-200 rounded-xl overflow-hidden shadow-sm hover:shadow-md transition-shadow duration-300 flex flex-col sm:flex-row">
             {/* Indicateur visuel latéral selon le mode */}
-            <div className={`w-2 ${session.deliveryMode === 'Présentiel' ? 'bg-indigo-500' : 'bg-emerald-500'}`} />
+            <div className={`w-2 ${session.deliveryMode === DeliveryMode.InPerson ? 'bg-indigo-500' : 'bg-emerald-500'}`} />
 
             <div className="p-5 flex-1">
                 <div className="flex justify-between items-start mb-2">
                     <div>
                         <span className="text-xs font-semibold uppercase tracking-wider text-indigo-600 bg-indigo-50 px-2 py-1 rounded">
-                            {session.course.targetAudience}
+                            {targetAudienceLabels[session.course.targetAudience as TargetAudience] ?? session.course.targetAudience}
                         </span>
                         <h3 className="text-xl font-bold text-gray-900 mt-2">{session.courseName}</h3>
                     </div>
                     <div className="text-right">
                         <span className={`text-sm font-bold ${session.course.maxCapacity <= 3 ? 'text-red-500' : 'text-gray-500'}`}>
-                            {session.course.maxCapacity} places restantes
+                            {session.userCount} places restantes
                         </span>
                     </div>
                 </div>
@@ -44,11 +47,13 @@ const SessionCard = ({ session, onViewDetails }: SessionCardProps) => {
                     </div>
                     <div className="flex flex-col">
                         <span className="text-gray-400 text-xs uppercase">Durée</span>
-                        <span className="font-medium">{session.course.durationInDays}</span>
+                        <span className="font-medium">{session.course.durationInDays} jour(s)</span>
                     </div>
                     <div className="flex flex-col">
                         <span className="text-gray-400 text-xs uppercase">Mode</span>
-                        <span className="font-medium">{session.deliveryMode}</span>
+                        <span className="font-medium">
+                            {deliveryModeLabels[session.deliveryMode as DeliveryMode] ?? session.deliveryMode}
+                        </span>
                     </div>
                     <div className="flex flex-col">
                         <span className="text-gray-400 text-xs uppercase">Formateur</span>

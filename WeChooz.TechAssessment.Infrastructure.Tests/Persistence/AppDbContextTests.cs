@@ -1,5 +1,6 @@
 ﻿using FluentAssertions;
 using WeChooz.TechAssessment.Domain.Courses;
+using WeChooz.TechAssessment.Domain.Enroll;
 using WeChooz.TechAssessment.Domain.Users;
 using WeChooz.TechAssessment.Domain.Sessions;
 using WeChooz.TechAssessment.Infrastructure.Tests.Helpers;
@@ -120,12 +121,16 @@ public class AppDbContextTests
         var User = new User
         {
             Id = Guid.NewGuid(),
-            SessionId = session.Id,
             FirstName = "Pierre",
             LastName = "Durand",
             Email = "pierre@test.com",
             CompanyName = "ACME",
-            Session = session
+        };
+        var Enrollement = new SessionEnroll()
+        {
+            SessionId = session.Id,
+            UserId = User.Id,
+            EnrollmentDate = DateTime.Now
         };
 
         context.Courses.Add(course);
@@ -135,7 +140,6 @@ public class AppDbContextTests
 
         var saved = await context.Users.FindAsync(User.Id);
         saved.Should().NotBeNull();
-        saved!.SessionId.Should().Be(session.Id);
         saved.Email.Should().Be("pierre@test.com");
     }
 }

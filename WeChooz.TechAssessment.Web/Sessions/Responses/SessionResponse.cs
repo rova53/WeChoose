@@ -20,7 +20,7 @@ public class SessionResponse
         CourseName = session.Course?.Name ?? string.Empty,
         StartDate = session.StarDate,
         DeliveryMode = session.DeliveryMode,
-        UserCount = session.Users?.Count ?? 0,
+        UserCount = session.Course.MaxCapacity - session.Enrollments?.Count ?? 0,
         Course = session.Course != null ? CourseResponse.FromDomain(session.Course) : null
     };
 }

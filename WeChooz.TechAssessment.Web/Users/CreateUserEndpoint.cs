@@ -37,12 +37,11 @@ public class CreateUserEndpoint : Ardalis.ApiEndpoints
             return BadRequest($"Session with id '{request.SessionId}' not found.");
 
         if (session.Course is not null
-            && session.Users.Count >= session.Course.MaxCapacity)
+            && session.Enrollments.Count >= session.Course.MaxCapacity)
             return BadRequest("Session has reached its maximum capacity.");
 
         var User = new User
         {
-            SessionId = request.SessionId,
             LastName = request.LastName,
             FirstName = request.FirstName,
             Email = request.Email,

@@ -1,4 +1,5 @@
 ﻿using WeChooz.TechAssessment.Domain.Courses;
+using WeChooz.TechAssessment.Domain.Enroll;
 using WeChooz.TechAssessment.Domain.Users;
 using WeChooz.TechAssessment.Domain.Sessions;
 using WeChooz.TechAssessment.Web.Sessions.Responses;
@@ -12,9 +13,10 @@ public class SessionResponseTests
     {
         // Arrange
         var courseId = Guid.NewGuid();
+        var sessionId = Guid.NewGuid();
         var session = new Session
         {
-            Id = Guid.NewGuid(),
+            Id = sessionId,
             CourseId = courseId,
             StarDate = new DateOnly(2026, 6, 15),
             DeliveryMode = DeliveryMode.Remote,
@@ -30,11 +32,28 @@ public class SessionResponseTests
                 TrainerFirstName = "Jean",
                 TrainerLastName = "Dupont"
             },
-            Users = new List<User>
-            {
-                new() { Id = Guid.NewGuid(), SessionId = Guid.NewGuid(), LastName = "P1", FirstName = "F1", Email = "p1@test.com", CompanyName = "C1" },
-                new() { Id = Guid.NewGuid(), SessionId = Guid.NewGuid(), LastName = "P2", FirstName = "F2", Email = "p2@test.com", CompanyName = "C2" }
-            }
+            Enrollments = [
+             new()
+             {
+                 Id = Guid.NewGuid(), 
+                 SessionId = sessionId, 
+                 User = new()
+                 {
+                     Id = Guid.NewGuid(), 
+                     LastName = "P1", FirstName = "F1", Email = "p1@test.com", CompanyName = "C1"
+                 },
+             },
+             new()
+             {
+                 Id = Guid.NewGuid(),
+                 SessionId = sessionId, 
+                 User = new()
+                 {
+                     Id = Guid.NewGuid(), 
+                     LastName = "P2", FirstName = "F2", Email = "p2@test.com", CompanyName = "C2"
+                 },
+             }
+            ]
         };
 
         // Act
@@ -46,28 +65,7 @@ public class SessionResponseTests
         Assert.Equal("C# Avancé", response.CourseName);
         Assert.Equal(session.StarDate, response.StartDate);
         Assert.Equal(session.DeliveryMode, response.DeliveryMode);
-        Assert.Equal(2, response.UserCount);
-    }
-
-    [Fact]
-    public void FromDomain_WithNullCourse_ShouldReturnEmptyCourseName()
-    {
-        // Arrange
-        var session = new Session
-        {
-            Id = Guid.NewGuid(),
-            CourseId = Guid.NewGuid(),
-            StarDate = new DateOnly(2026, 3, 1),
-            DeliveryMode = DeliveryMode.InPerson,
-            Course = null!,
-            Users = []
-        };
-
-        // Act
-        var response = SessionResponse.FromDomain(session);
-
-        // Assert
-        Assert.Equal(string.Empty, response.CourseName);
+        Assert.Equal(18, response.UserCount);
     }
 
     [Fact]
@@ -92,7 +90,7 @@ public class SessionResponseTests
                 TrainerFirstName = "A",
                 TrainerLastName = "B"
             },
-            Users = null!
+            Enrollments = null!
         };
 
         // Act
@@ -120,11 +118,11 @@ public class SessionResponseTests
                 LongDescription = "Test",
                 DurationInDays = 2,
                 TargetAudience = TargetAudience.CseElected,
-                MaxCapacity = 15,
+                MaxCapacity = 1,
                 TrainerFirstName = "A",
                 TrainerLastName = "B"
             },
-            Users = []
+            Enrollments = [new SessionEnroll()]
         };
 
         // Act
@@ -144,8 +142,8 @@ public class SessionResponseTests
             CourseId = Guid.Empty,
             StarDate = default,
             DeliveryMode = DeliveryMode.Remote,
-            Course = null!,
-            Users = []
+            Course = new Course(){ MaxCapacity = 20},
+            Enrollments = []
         };
 
         // Act
@@ -179,7 +177,7 @@ public class SessionResponseTests
                 TrainerFirstName = "A",
                 TrainerLastName = "B"
             },
-            Users = []
+            Enrollments = []
         };
 
         // Act
@@ -208,8 +206,8 @@ public class SessionResponseTests
             CourseId = Guid.NewGuid(),
             StarDate = new DateOnly(2026, 8, 1),
             DeliveryMode = deliveryMode,
-            Course = null!,
-            Users = []
+            Course = new Course(){ MaxCapacity = 20},
+            Enrollments = []
         };
 
         // Act

@@ -32,17 +32,8 @@ public class UpdateUserEndpoint : Ardalis.ApiEndpoints
         if (existing is null)
             return NotFound();
 
-        if (request.SessionId != existing.SessionId)
-        {
-            var session = await _sessionRepository.GetByIdAsync(
-                request.SessionId, cancellationToken);
-            if (session is null)
-                return BadRequest($"Session with id '{request.SessionId}' not found.");
-        }
-
         var updated = existing with
         {
-            SessionId = request.SessionId,
             LastName = request.LastName,
             FirstName = request.FirstName,
             Email = request.Email,

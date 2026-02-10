@@ -16,7 +16,8 @@ public class SessionRepository : BaseRepository<Session>, ISessionRepository
     {
         return await DbSet
             .Include(s => s.Course)
-            .Include(s => s.Users)
+            .Include(s => s.Enrollments)
+            .ThenInclude(e => e.User)
             .FirstOrDefaultAsync(s => s.Id == id, cancellationToken);
     }
 
@@ -25,7 +26,8 @@ public class SessionRepository : BaseRepository<Session>, ISessionRepository
         return await DbSet
             .AsNoTracking()
             .Include(s => s.Course)
-            .Include(s => s.Users)
+            .Include(s => s.Enrollments)
+            .ThenInclude(e => e.User)
             .OrderBy(s => s.StarDate)
             .ToListAsync(cancellationToken);
     }

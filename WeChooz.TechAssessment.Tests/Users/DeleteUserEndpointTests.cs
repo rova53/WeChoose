@@ -24,7 +24,6 @@ public class DeleteUserEndpointTests
         var existingUser = new User
         {
             Id = UserId,
-            SessionId = Guid.NewGuid(),
             LastName = "Dupont",
             FirstName = "Jean",
             Email = "jean.dupont@email.com",
@@ -86,7 +85,6 @@ public class DeleteUserEndpointTests
         var existingUser = new User
         {
             Id = UserId,
-            SessionId = Guid.NewGuid(),
             LastName = "Martin",
             FirstName = "Marie",
             Email = "marie.martin@email.com",
@@ -140,7 +138,6 @@ public class DeleteUserEndpointTests
             .Returns(new User
             {
                 Id = UserId,
-                SessionId = Guid.NewGuid(),
                 LastName = "Test",
                 FirstName = "Test",
                 Email = "test@test.com",

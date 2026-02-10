@@ -14,7 +14,6 @@ public class UserResponse
     public static UserResponse FromDomain(User User) => new()
     {
         Id = User.Id,
-        SessionId = User.SessionId,
         LastName = User.LastName,
         FirstName = User.FirstName,
         Email = User.Email,

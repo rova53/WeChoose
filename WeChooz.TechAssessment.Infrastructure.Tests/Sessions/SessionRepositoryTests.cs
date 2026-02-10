@@ -1,5 +1,6 @@
 ﻿using FluentAssertions;
 using WeChooz.TechAssessment.Domain.Courses;
+using WeChooz.TechAssessment.Domain.Enroll;
 using WeChooz.TechAssessment.Domain.Users;
 using WeChooz.TechAssessment.Domain.Sessions;
 using WeChooz.TechAssessment.Infrastructure.Sessions;
@@ -27,13 +28,13 @@ public class SessionRepositoryTests
         Id = id ?? Guid.NewGuid(),
         CourseId = courseId,
         StarDate = date ?? DateOnly.FromDateTime(DateTime.UtcNow.AddDays(30)),
-        DeliveryMode = mode
+        DeliveryMode = mode,
+        Enrollments = [ new SessionEnroll() { User = CreateUser(id ?? Guid.NewGuid()) }]
     };
 
     private static User CreateUser(Guid sessionId, string email = "test@test.com", Guid? id = null) => new()
     {
         Id = id ?? Guid.NewGuid(),
-        SessionId = sessionId,
         FirstName = "Pierre",
         LastName = "Durand",
         Email = email,
@@ -77,8 +78,8 @@ public class SessionRepositoryTests
         var result = await repo.GetByIdAsync(session.Id);
 
         result.Should().NotBeNull();
-        result!.Users.Should().HaveCount(1);
-        result.Users.First().Email.Should().Be("test@test.com");
+        result!.Enrollments.Select(u => u.User).Should().HaveCount(1);
+        result.Enrollments.Select(u => u.User).First().Email.Should().Be("test@test.com");
     }
     [Fact]
     public async Task GetByIdAsync_Should_Return_Null_When_Not_Found()
@@ -132,7 +133,7 @@ public class SessionRepositoryTests
 
         result.Should().HaveCount(1);
         result[0].Course.Should().NotBeNull();
-        result[0].Users.Should().HaveCount(1);
+        result[0].Enrollments.Select(u => u.User).Should().HaveCount(1);
     }
     [Fact]
     public async Task GetAllAsync_Should_Return_Empty_When_No_Sessions()

@@ -38,7 +38,7 @@ public class CreateSessionEndpoint : Ardalis.ApiEndpoints
             CourseId = request.CourseId,
             StarDate = request.StartDate,
             DeliveryMode = request.DeliveryMode,
-            Users = []
+            Enrollments = []
         };
 
         var created = await _sessionRepository.AddAsync(session, cancellationToken);

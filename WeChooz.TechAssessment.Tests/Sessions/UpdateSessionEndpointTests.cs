@@ -37,16 +37,16 @@ public class UpdateSessionEndpointTests
             StartDate = startDate,
             DeliveryMode = deliveryMode
         };
-
+        var course = new Course { Id = courseId, MaxCapacity = 20};
+        
         var existingSession = new Session 
         { 
             Id = sessionId,
             CourseId = Guid.NewGuid(),
             StarDate = DateOnly.FromDateTime(DateTime.Now.AddDays(-1)),
-            DeliveryMode = DeliveryMode.InPerson
+            DeliveryMode = DeliveryMode.InPerson,
+            Course = course
         };
-
-        var course = new Course { Id = courseId };
         
         var updatedSession = existingSession with
         {
