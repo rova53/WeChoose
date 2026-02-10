@@ -13,7 +13,7 @@ namespace WeChooz.TechAssessment.Infrastructure.Persistence.Migrations
         {
             migrationBuilder.InsertData(
                 table: "Users",
-                columns: new[] { "Id", "LastName", "FirstName", "Email", "CompanyName", "Role" },
+                columns: new[] { "Id", "LastName", "FirstName", "Email", "CompanyName", "Role","Password" },
                 values: new string[,]
                 {
                     { 
@@ -22,7 +22,8 @@ namespace WeChooz.TechAssessment.Infrastructure.Persistence.Migrations
                         "Form", 
                         "formation@test.com", 
                         "TestFormation", 
-                        $"{(int)(PolicyRoles.Formation)}"
+                        $"{(int)(PolicyRoles.Formation)}",
+                        ""
                     },
                     { 
                         Guid.NewGuid().ToString(), 
@@ -30,7 +31,8 @@ namespace WeChooz.TechAssessment.Infrastructure.Persistence.Migrations
                         "Sales", 
                         "sales@test.com", 
                         "TestSales", 
-                        $"{(int)PolicyRoles.Sales}"  // Un seul rôle
+                        $"{(int)PolicyRoles.Sales}",
+                        ""
                     }
                 }
             );
