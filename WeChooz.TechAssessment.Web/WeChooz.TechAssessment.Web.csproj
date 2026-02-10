@@ -28,6 +28,7 @@
   </ItemGroup>
 
   <ItemGroup>
+    <Folder Include="ClientApp\src\hooks\auth\" />
     <Folder Include="Home\Requests\" />
     <Folder Include="wwwroot\" />
   </ItemGroup>

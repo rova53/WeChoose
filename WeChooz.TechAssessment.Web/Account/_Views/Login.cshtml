@@ -1,71 +1,186 @@
 ﻿@model WeChooz.TechAssessment.Web.Account.Requests.LoginRequest
 @{
-    ViewData["Title"] = "Connexion";
+ViewData["Title"] = "Connexion";
 }
 
-<div class="min-h-screen flex items-center justify-center bg-gray-50 py-12 px-4 sm:px-6 lg:px-8">
-    <div class="max-w-md w-full space-y-8">
-        <div>
-            <h2 class="mt-6 text-center text-3xl font-extrabold text-gray-900">
-                Connectez-vous à votre compte
-            </h2>
+<style>
+    :root {
+        --primary: #2563eb;
+        --primary-hover: #1d4ed8;
+        --bg-gradient: linear-gradient(135deg, #f8fafc 0%, #e2e8f0 100%);
+        --text-main: #1e293b;
+        --text-muted: #64748b;
+        --white: #ffffff;
+        --error: #ef4444;
+    }
+
+    .login-container {
+        min-height: 100vh;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        background: var(--bg-gradient);
+        font-family: 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+        padding: 1rem;
+    }
+
+    .login-card {
+        background: var(--white);
+        width: 100%;
+        max-width: 400px;
+        padding: 2.5rem;
+        border-radius: 20px;
+        box-shadow: 0 10px 25px rgba(0, 0, 0, 0.05), 0 20px 48px rgba(0, 0, 0, 0.05);
+    }
+
+    .login-header {
+        text-align: center;
+        margin-bottom: 2rem;
+    }
+
+    .login-header h2 {
+        color: var(--text-main);
+        font-size: 1.75rem;
+        font-weight: 800;
+        margin-bottom: 0.5rem;
+    }
+
+    .login-header p {
+        color: var(--text-muted);
+        font-size: 0.9rem;
+    }
+
+    .form-group {
+        margin-bottom: 1.25rem;
+    }
+
+    .form-group label {
+        display: block;
+        font-size: 0.85rem;
+        font-weight: 600;
+        color: var(--text-main);
+        margin-bottom: 0.5rem;
+    }
+
+    .input-control {
+        width: 100%;
+        padding: 0.8rem 1rem;
+        border: 1.5px solid #e2e8f0;
+        border-radius: 10px;
+        font-size: 0.95rem;
+        transition: all 0.2s ease;
+        box-sizing: border-box;
+    }
+
+    .input-control:focus {
+        outline: none;
+        border-color: var(--primary);
+        box-shadow: 0 0 0 4px rgba(37, 99, 235, 0.1);
+    }
+
+    .error-alert {
+        background: #fef2f2;
+        border-left: 4px solid var(--error);
+        color: #991b1b;
+        padding: 1rem;
+        border-radius: 8px;
+        font-size: 0.85rem;
+        margin-bottom: 1.5rem;
+    }
+
+    .form-options {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        margin-bottom: 1.5rem;
+        font-size: 0.85rem;
+    }
+
+    .checkbox-group {
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+        color: var(--text-muted);
+    }
+
+    .forgot-link {
+        color: var(--primary);
+        text-decoration: none;
+        font-weight: 600;
+    }
+
+    .forgot-link:hover {
+        text-decoration: underline;
+    }
+
+    .btn-submit {
+        width: 100%;
+        padding: 0.8rem;
+        background: var(--primary);
+        color: white;
+        border: none;
+        border-radius: 10px;
+        font-size: 1rem;
+        font-weight: 700;
+        cursor: pointer;
+        transition: background 0.2s ease, transform 0.1s ease;
+    }
+
+    .btn-submit:hover {
+        background: var(--primary-hover);
+    }
+
+    .btn-submit:active {
+        transform: scale(0.98);
+    }
+
+    .validation-error {
+        color: var(--error);
+        font-size: 0.75rem;
+        margin-top: 0.25rem;
+        display: block;
+    }
+</style>
+
+<div class="login-container">
+    <div class="login-card">
+        <div class="login-header">
+            <h2>Bienvenue</h2>
+            <p>Connectez-vous à votre espace</p>
         </div>
-        <form class="mt-8 space-y-6" method="POST" asp-controller="Account" asp-action="Login">
+
+        <form method="POST" asp-controller="Account" asp-action="Login">
+            @Html.AntiForgeryToken()
+
             @if (!string.IsNullOrEmpty(ViewData["ErrorMessage"]?.ToString()))
             {
-                <div class="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded relative" role="alert">
-                    <span class="block sm:inline">@ViewData["ErrorMessage"]</span>
+                <div class="error-alert">
+                    @ViewData["ErrorMessage"]
                 </div>
             }
-            
-            <div asp-validation-summary="ModelOnly" class="text-red-500"></div>
-            
-            <input type="hidden" name="ReturnUrl" value="@Context.Request.Query["ReturnUrl"]" />
-            
-            <div class="rounded-md shadow-sm -space-y-px">
-                <div>
-                    <label for="Username" class="sr-only">Nom d'utilisateur</label>
-                    <input asp-for="Username" 
-                           class="appearance-none rounded-none relative block w-full px-3 py-2 border border-gray-300 placeholder-gray-500 text-gray-900 rounded-t-md focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 focus:z-10 sm:text-sm" 
-                           placeholder="Nom d'utilisateur">
-                    <span asp-validation-for="Username" class="text-red-500 text-sm"></span>
-                </div>
-                <div>
-                    <label for="Password" class="sr-only">Mot de passe</label>
-                    <input asp-for="Password" 
-                           class="appearance-none rounded-none relative block w-full px-3 py-2 border border-gray-300 placeholder-gray-500 text-gray-900 rounded-b-md focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 focus:z-10 sm:text-sm" 
-                           placeholder="Mot de passe">
-                    <span asp-validation-for="Password" class="text-red-500 text-sm"></span>
+
+            <input type="hidden" name="ReturnUrl" value="@Context.Request.Query["ReturnUrl"]"/>
+
+            <div class="form-group">
+                <label asp-for="Username">Nom d'utilisateur</label>
+                <input name="Username" asp-for="Username" class="input-control" placeholder="Entrez votre identifiant"/>
+                <span asp-validation-for="Username" class="validation-error"></span>
+            </div>
+
+            <div class="form-group">
+                <label asp-for="Password">Mot de passe</label>
+                <input name="Password" asp-for="Password" type="password" class="input-control" placeholder="••••••••"/>
+                <span asp-validation-for="Password" class="validation-error"></span>
+            </div>
+
+            <div class="form-options">
+                <div class="checkbox-group">
+                    <input name="RememberMe" asp-for="RememberMe" type="checkbox"/>
+                    <label asp-for="RememberMe" style="margin-bottom: 0;">Rester connecté</label>
                 </div>
             </div>
 
-            <div class="flex items-center justify-between">
-                <div class="flex items-center">
-                    <input asp-for="RememberMe" 
-                           class="h-4 w-4 text-indigo-600 focus:ring-indigo-500 border-gray-300 rounded">
-                    <label for="RememberMe" class="ml-2 block text-sm text-gray-900">
-                        Se souvenir de moi
-                    </label>
-                </div>
-
-                <div class="text-sm">
-                    <a href="#" class="font-medium text-indigo-600 hover:text-indigo-500">
-                        Mot de passe oublié?
-                    </a>
-                </div>
-            </div>
-
-            <div>
-                <button type="submit" 
-                        class="group relative w-full flex justify-center py-2 px-4 border border-transparent text-sm font-medium rounded-md text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500">
-                    <span class="absolute left-0 inset-y-0 flex items-center pl-3">
-                        <svg class="h-5 w-5 text-indigo-500 group-hover:text-indigo-400" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true">
-                            <path fill-rule="evenodd" d="M5 9V7a5 5 0 0110 0v2a2 2 0 012 2v5a2 2 0 01-2 2H5a2 2 0 01-2-2v-5a2 2 0 012-2zm8-2v2H7V7a3 3 0 016 0z" clip-rule="evenodd" />
-                        </svg>
-                    </span>
-                    Se connecter
-                </button>
-            </div>
+            <button type="submit" class="btn-submit">Se connecter</button>
         </form>
     </div>
 </div>

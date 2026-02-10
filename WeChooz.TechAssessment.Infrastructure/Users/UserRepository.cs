@@ -39,10 +39,10 @@ public class UserRepository : BaseRepository<User>, IUserRepository
         throw new NotImplementedException();
     }
 
-    public Task<bool> FindByNameAndPassAsync(string modelUsername, string modelPassword, CancellationToken cancellationToken = default)
+    public Task<User?> FindByEmail(string email, CancellationToken cancellationToken = default)
     {
         return DbSet
             .AsNoTracking()
-            .AnyAsync(p => p.Email == modelUsername && p.Password == modelPassword, cancellationToken);
+            .FirstOrDefaultAsync(p => p.Email == email, cancellationToken);
     }
 }
