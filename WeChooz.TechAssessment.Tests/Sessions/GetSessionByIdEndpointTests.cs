@@ -1,5 +1,6 @@
 ﻿using Microsoft.AspNetCore.Mvc;
 using NSubstitute;
+using WeChooz.TechAssessment.Domain.Courses;
 using WeChooz.TechAssessment.Domain.Sessions;
 using WeChooz.TechAssessment.Web.Sessions;
 using WeChooz.TechAssessment.Web.Sessions.Responses;
@@ -22,7 +23,8 @@ public class GetSessionByIdEndpointTests
     {
         // Arrange
         var sessionId = Guid.NewGuid();
-        var session = new Session { Id = sessionId }; // Ajoutez d'autres propriétés selon votre modèle Session
+        var course = new Course { Id = Guid.NewGuid(), MaxCapacity = 20};
+        var session = new Session { Id = sessionId, Course = course}; 
         _sessionRepository.GetByIdAsync(sessionId, Arg.Any<CancellationToken>())
             .Returns(session);
 

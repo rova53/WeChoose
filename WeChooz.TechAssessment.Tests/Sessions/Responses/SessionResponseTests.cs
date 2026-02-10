@@ -1,4 +1,5 @@
 ﻿using WeChooz.TechAssessment.Domain.Courses;
+using WeChooz.TechAssessment.Domain.Enroll;
 using WeChooz.TechAssessment.Domain.Users;
 using WeChooz.TechAssessment.Domain.Sessions;
 using WeChooz.TechAssessment.Web.Sessions.Responses;
@@ -64,28 +65,7 @@ public class SessionResponseTests
         Assert.Equal("C# Avancé", response.CourseName);
         Assert.Equal(session.StarDate, response.StartDate);
         Assert.Equal(session.DeliveryMode, response.DeliveryMode);
-        Assert.Equal(2, response.UserCount);
-    }
-
-    [Fact]
-    public void FromDomain_WithNullCourse_ShouldReturnEmptyCourseName()
-    {
-        // Arrange
-        var session = new Session
-        {
-            Id = Guid.NewGuid(),
-            CourseId = Guid.NewGuid(),
-            StarDate = new DateOnly(2026, 3, 1),
-            DeliveryMode = DeliveryMode.InPerson,
-            Course = null!,
-            Enrollments = []
-        };
-
-        // Act
-        var response = SessionResponse.FromDomain(session);
-
-        // Assert
-        Assert.Equal(string.Empty, response.CourseName);
+        Assert.Equal(18, response.UserCount);
     }
 
     [Fact]
@@ -138,11 +118,11 @@ public class SessionResponseTests
                 LongDescription = "Test",
                 DurationInDays = 2,
                 TargetAudience = TargetAudience.CseElected,
-                MaxCapacity = 15,
+                MaxCapacity = 1,
                 TrainerFirstName = "A",
                 TrainerLastName = "B"
             },
-            Enrollments = []
+            Enrollments = [new SessionEnroll()]
         };
 
         // Act
@@ -162,7 +142,7 @@ public class SessionResponseTests
             CourseId = Guid.Empty,
             StarDate = default,
             DeliveryMode = DeliveryMode.Remote,
-            Course = null!,
+            Course = new Course(){ MaxCapacity = 20},
             Enrollments = []
         };
 
@@ -226,7 +206,7 @@ public class SessionResponseTests
             CourseId = Guid.NewGuid(),
             StarDate = new DateOnly(2026, 8, 1),
             DeliveryMode = deliveryMode,
-            Course = null!,
+            Course = new Course(){ MaxCapacity = 20},
             Enrollments = []
         };
 

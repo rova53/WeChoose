@@ -93,7 +93,7 @@ public class CreateSessionEndpointTests
         Assert.Equal("C# Avancé", response.CourseName);
         Assert.Equal(request.StartDate, response.StartDate);
         Assert.Equal(request.DeliveryMode, response.DeliveryMode);
-        Assert.Equal(0, response.UserCount);
+        Assert.Equal(20, response.UserCount);
     }
 
     [Fact]

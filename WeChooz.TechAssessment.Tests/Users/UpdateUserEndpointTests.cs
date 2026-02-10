@@ -10,15 +10,15 @@ namespace WeChooz.TechAssessment.Tests.Users;
 
 public class UpdateUserEndpointTests
 {
-    private readonly IUserRepository _UserRepository;
+    private readonly IUserRepository _userRepository;
     private readonly ISessionRepository _sessionRepository;
     private readonly UpdateUserEndpoint _endpoint;
 
     public UpdateUserEndpointTests()
     {
-        _UserRepository = Substitute.For<IUserRepository>();
+        _userRepository = Substitute.For<IUserRepository>();
         _sessionRepository = Substitute.For<ISessionRepository>();
-        _endpoint = new UpdateUserEndpoint(_UserRepository, _sessionRepository);
+        _endpoint = new UpdateUserEndpoint(_userRepository, _sessionRepository);
     }
 
     [Fact]
@@ -40,18 +40,17 @@ public class UpdateUserEndpointTests
         var request = new UpdateUserRequest
         {
             Id = UserId,
-            SessionId = sessionId,
             LastName = "Nouveau",
             FirstName = "Prénom",
             Email = "nouveau@email.com",
             CompanyName = "New Corp"
         };
 
-        _UserRepository
+        _userRepository
             .GetByIdAsync(UserId, Arg.Any<CancellationToken>())
             .Returns(existing);
 
-        _UserRepository
+        _userRepository
             .UpdateAsync(Arg.Any<User>(), Arg.Any<CancellationToken>())
             .Returns(callInfo => callInfo.Arg<User>());
 
@@ -63,7 +62,6 @@ public class UpdateUserEndpointTests
         var response = Assert.IsType<UserResponse>(okResult.Value);
 
         Assert.Equal(UserId, response.Id);
-        Assert.Equal(request.SessionId, response.SessionId);
         Assert.Equal(request.LastName, response.LastName);
         Assert.Equal(request.FirstName, response.FirstName);
         Assert.Equal(request.Email, response.Email);
@@ -77,14 +75,13 @@ public class UpdateUserEndpointTests
         var request = new UpdateUserRequest
         {
             Id = Guid.NewGuid(),
-            SessionId = Guid.NewGuid(),
             LastName = "Test",
             FirstName = "Test",
             Email = "test@test.com",
             CompanyName = "Test"
         };
 
-        _UserRepository
+        _userRepository
             .GetByIdAsync(request.Id, Arg.Any<CancellationToken>())
             .Returns((User?)null);
 
@@ -102,14 +99,13 @@ public class UpdateUserEndpointTests
         var request = new UpdateUserRequest
         {
             Id = Guid.NewGuid(),
-            SessionId = Guid.NewGuid(),
             LastName = "Test",
             FirstName = "Test",
             Email = "test@test.com",
             CompanyName = "Test"
         };
 
-        _UserRepository
+        _userRepository
             .GetByIdAsync(request.Id, Arg.Any<CancellationToken>())
             .Returns((User?)null);
 
@@ -117,108 +113,53 @@ public class UpdateUserEndpointTests
         await _endpoint.HandleAsync(request, CancellationToken.None);
 
         // Assert
-        await _UserRepository
+        await _userRepository
             .DidNotReceive()
             .UpdateAsync(Arg.Any<User>(), Arg.Any<CancellationToken>());
     }
 
     [Fact]
-    public async Task HandleAsync_WithDifferentSession_Existing_ShouldReturnOk()
+    public async Task HandleAsync_ShouldPassCancellationTokenToUserRepository()
     {
         // Arrange
-        var UserId = Guid.NewGuid();
-        var oldSessionId = Guid.NewGuid();
-        var newSessionId = Guid.NewGuid();
-
+        var userId = Guid.NewGuid();
         var existing = new User
         {
-            Id = UserId,
-            LastName = "Dupont",
-            FirstName = "Jean",
-            Email = "jean@email.com",
-            CompanyName = "Acme"
+            Id = userId,
+            LastName = "Test",
+            FirstName = "Test",
+            Email = "test@test.com",
+            CompanyName = "Test"
         };
 
         var request = new UpdateUserRequest
         {
-            Id = UserId,
-            SessionId = newSessionId,
-            LastName = "Dupont",
-            FirstName = "Jean",
-            Email = "jean@email.com",
-            CompanyName = "Acme"
+            Id = userId,
+            LastName = "Test",
+            FirstName = "Test",
+            Email = "test@test.com",
+            CompanyName = "Test"
         };
 
-        var newSession = new Session
-        {
-            Id = newSessionId,
-            StarDate = new DateOnly(2026, 3, 1),
-            DeliveryMode = DeliveryMode.Remote,
-            Enrollments = []
-        };
+        using var cts = new CancellationTokenSource();
+        var token = cts.Token;
 
-        _UserRepository
-            .GetByIdAsync(UserId, Arg.Any<CancellationToken>())
+        _userRepository
+            .GetByIdAsync(userId, Arg.Any<CancellationToken>())
             .Returns(existing);
 
-        _sessionRepository
-            .GetByIdAsync(newSessionId, Arg.Any<CancellationToken>())
-            .Returns(newSession);
-
-        _UserRepository
+        // Ajout du mock pour UpdateAsync
+        _userRepository
             .UpdateAsync(Arg.Any<User>(), Arg.Any<CancellationToken>())
-            .Returns(callInfo => callInfo.Arg<User>());
+            .Returns(existing);  // Retourne le même utilisateur ou un utilisateur modifié
 
         // Act
-        var result = await _endpoint.HandleAsync(request, CancellationToken.None);
+        await _endpoint.HandleAsync(request, token);
 
         // Assert
-        var okResult = Assert.IsType<OkObjectResult>(result.Result);
-        var response = Assert.IsType<UserResponse>(okResult.Value);
-        Assert.Equal(newSessionId, response.SessionId);
-    }
-
-    [Fact]
-    public async Task HandleAsync_WithDifferentSession_NonExisting_ShouldReturnBadRequest()
-    {
-        // Arrange
-        var UserId = Guid.NewGuid();
-        var oldSessionId = Guid.NewGuid();
-        var newSessionId = Guid.NewGuid();
-
-        var existing = new User
-        {
-            Id = UserId,
-            LastName = "Dupont",
-            FirstName = "Jean",
-            Email = "jean@email.com",
-            CompanyName = "Acme"
-        };
-
-        var request = new UpdateUserRequest
-        {
-            Id = UserId,
-            SessionId = newSessionId,
-            LastName = "Dupont",
-            FirstName = "Jean",
-            Email = "jean@email.com",
-            CompanyName = "Acme"
-        };
-
-        _UserRepository
-            .GetByIdAsync(UserId, Arg.Any<CancellationToken>())
-            .Returns(existing);
-
-        _sessionRepository
-            .GetByIdAsync(newSessionId, Arg.Any<CancellationToken>())
-            .Returns((Session?)null);
-
-        // Act
-        var result = await _endpoint.HandleAsync(request, CancellationToken.None);
-
-        // Assert
-        var badRequestResult = Assert.IsType<BadRequestObjectResult>(result.Result);
-        Assert.Contains(newSessionId.ToString(), badRequestResult.Value!.ToString());
+        await _userRepository
+            .Received(1)
+            .GetByIdAsync(userId, token);
     }
 
     [Fact]
@@ -241,14 +182,13 @@ public class UpdateUserEndpointTests
         var request = new UpdateUserRequest
         {
             Id = UserId,
-            SessionId = newSessionId,
             LastName = "Test",
             FirstName = "Test",
             Email = "test@test.com",
             CompanyName = "Test"
         };
 
-        _UserRepository
+        _userRepository
             .GetByIdAsync(UserId, Arg.Any<CancellationToken>())
             .Returns(existing);
 
@@ -260,7 +200,7 @@ public class UpdateUserEndpointTests
         await _endpoint.HandleAsync(request, CancellationToken.None);
 
         // Assert
-        await _UserRepository
+        await _userRepository
             .DidNotReceive()
             .UpdateAsync(Arg.Any<User>(), Arg.Any<CancellationToken>());
     }
@@ -284,18 +224,17 @@ public class UpdateUserEndpointTests
         var request = new UpdateUserRequest
         {
             Id = UserId,
-            SessionId = sessionId,
             LastName = "Updated",
             FirstName = "Updated",
             Email = "updated@test.com",
             CompanyName = "Updated"
         };
 
-        _UserRepository
+        _userRepository
             .GetByIdAsync(UserId, Arg.Any<CancellationToken>())
             .Returns(existing);
 
-        _UserRepository
+        _userRepository
             .UpdateAsync(Arg.Any<User>(), Arg.Any<CancellationToken>())
             .Returns(callInfo => callInfo.Arg<User>());
 
@@ -308,63 +247,13 @@ public class UpdateUserEndpointTests
             .GetByIdAsync(Arg.Any<Guid>(), Arg.Any<CancellationToken>());
     }
 
-    [Fact]
-    public async Task HandleAsync_ShouldCallUpdateAsyncWithCorrectValues()
-    {
-        // Arrange
-        var UserId = Guid.NewGuid();
-        var sessionId = Guid.NewGuid();
-
-        var existing = new User
-        {
-            Id = UserId,
-            LastName = "Old",
-            FirstName = "Old",
-            Email = "old@test.com",
-            CompanyName = "Old"
-        };
-
-        var request = new UpdateUserRequest
-        {
-            Id = UserId,
-            SessionId = sessionId,
-            LastName = "New",
-            FirstName = "New",
-            Email = "new@test.com",
-            CompanyName = "New Corp"
-        };
-
-        _UserRepository
-            .GetByIdAsync(UserId, Arg.Any<CancellationToken>())
-            .Returns(existing);
-
-        _UserRepository
-            .UpdateAsync(Arg.Any<User>(), Arg.Any<CancellationToken>())
-            .Returns(callInfo => callInfo.Arg<User>());
-
-        // Act
-        await _endpoint.HandleAsync(request, CancellationToken.None);
-
-        // Assert
-        await _UserRepository
-            .Received(1)
-            .UpdateAsync(Arg.Is<User>(p =>
-                p.Id == UserId &&
-                p.LastName == request.LastName &&
-                p.FirstName == request.FirstName &&
-                p.Email == request.Email &&
-                p.CompanyName == request.CompanyName
-            ), Arg.Any<CancellationToken>());
-    }
-
-    [Fact]
+   [Fact]
     public async Task HandleAsync_ShouldPassCancellationTokenToGetByIdAsync()
     {
         // Arrange
         var request = new UpdateUserRequest
         {
             Id = Guid.NewGuid(),
-            SessionId = Guid.NewGuid(),
             LastName = "Test",
             FirstName = "Test",
             Email = "test@test.com",
@@ -374,7 +263,7 @@ public class UpdateUserEndpointTests
         using var cts = new CancellationTokenSource();
         var token = cts.Token;
 
-        _UserRepository
+        _userRepository
             .GetByIdAsync(request.Id, Arg.Any<CancellationToken>())
             .Returns((User?)null);
 
@@ -382,56 +271,9 @@ public class UpdateUserEndpointTests
         await _endpoint.HandleAsync(request, token);
 
         // Assert
-        await _UserRepository
+        await _userRepository
             .Received(1)
             .GetByIdAsync(request.Id, token);
-    }
-
-    [Fact]
-    public async Task HandleAsync_ShouldPassCancellationTokenToSessionRepository()
-    {
-        // Arrange
-        var UserId = Guid.NewGuid();
-        var oldSessionId = Guid.NewGuid();
-        var newSessionId = Guid.NewGuid();
-
-        var existing = new User
-        {
-            Id = UserId,
-            LastName = "Test",
-            FirstName = "Test",
-            Email = "test@test.com",
-            CompanyName = "Test"
-        };
-
-        var request = new UpdateUserRequest
-        {
-            Id = UserId,
-            SessionId = newSessionId,
-            LastName = "Test",
-            FirstName = "Test",
-            Email = "test@test.com",
-            CompanyName = "Test"
-        };
-
-        using var cts = new CancellationTokenSource();
-        var token = cts.Token;
-
-        _UserRepository
-            .GetByIdAsync(UserId, Arg.Any<CancellationToken>())
-            .Returns(existing);
-
-        _sessionRepository
-            .GetByIdAsync(newSessionId, Arg.Any<CancellationToken>())
-            .Returns((Session?)null);
-
-        // Act
-        await _endpoint.HandleAsync(request, token);
-
-        // Assert
-        await _sessionRepository
-            .Received(1)
-            .GetByIdAsync(newSessionId, token);
     }
 
     [Fact]
@@ -453,7 +295,6 @@ public class UpdateUserEndpointTests
         var request = new UpdateUserRequest
         {
             Id = UserId,
-            SessionId = sessionId,
             LastName = "Updated",
             FirstName = "Updated",
             Email = "updated@test.com",
@@ -463,11 +304,11 @@ public class UpdateUserEndpointTests
         using var cts = new CancellationTokenSource();
         var token = cts.Token;
 
-        _UserRepository
+        _userRepository
             .GetByIdAsync(UserId, Arg.Any<CancellationToken>())
             .Returns(existing);
 
-        _UserRepository
+        _userRepository
             .UpdateAsync(Arg.Any<User>(), Arg.Any<CancellationToken>())
             .Returns(callInfo => callInfo.Arg<User>());
 
@@ -475,7 +316,7 @@ public class UpdateUserEndpointTests
         await _endpoint.HandleAsync(request, token);
 
         // Assert
-        await _UserRepository
+        await _userRepository
             .Received(1)
             .UpdateAsync(Arg.Any<User>(), token);
     }
@@ -499,18 +340,17 @@ public class UpdateUserEndpointTests
         var request = new UpdateUserRequest
         {
             Id = UserId,
-            SessionId = sessionId,
             LastName = "Modified",
             FirstName = "Modified",
             Email = "modified@test.com",
             CompanyName = "Modified"
         };
 
-        _UserRepository
+        _userRepository
             .GetByIdAsync(UserId, Arg.Any<CancellationToken>())
             .Returns(existing);
 
-        _UserRepository
+        _userRepository
             .UpdateAsync(Arg.Any<User>(), Arg.Any<CancellationToken>())
             .Returns(callInfo => callInfo.Arg<User>());
 

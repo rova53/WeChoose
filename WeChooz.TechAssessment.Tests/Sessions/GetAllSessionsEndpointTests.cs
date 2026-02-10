@@ -90,10 +90,10 @@ public class GetAllSessionsEndpointTests
         Assert.Equal(2, responseList.Count);
         Assert.Equal(sessions[0].Id, responseList[0].Id);
         Assert.Equal("C# Avancé", responseList[0].CourseName);
-        Assert.Equal(1, responseList[0].UserCount);
+        Assert.Equal(19, responseList[0].UserCount);
         Assert.Equal(sessions[1].Id, responseList[1].Id);
         Assert.Equal("Docker", responseList[1].CourseName);
-        Assert.Equal(0, responseList[1].UserCount);
+        Assert.Equal(15, responseList[1].UserCount);
     }
 
     [Fact]
@@ -192,6 +192,6 @@ public class GetAllSessionsEndpointTests
         Assert.Equal("Kubernetes", response.CourseName);
         Assert.Equal(session.StarDate, response.StartDate);
         Assert.Equal(session.DeliveryMode, response.DeliveryMode);
-        Assert.Equal(0, response.UserCount);
+        Assert.Equal(12, response.UserCount);
     }
 }

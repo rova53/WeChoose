@@ -73,7 +73,6 @@ public class CreateUserEndpointTests
         Assert.Equal(201, createdResult.StatusCode);
 
         var response = Assert.IsType<UserResponse>(createdResult.Value);
-        Assert.Equal(request.SessionId, response.SessionId);
         Assert.Equal(request.LastName, response.LastName);
         Assert.Equal(request.FirstName, response.FirstName);
         Assert.Equal(request.Email, response.Email);

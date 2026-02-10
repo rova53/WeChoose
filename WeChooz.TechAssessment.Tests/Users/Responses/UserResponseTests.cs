@@ -51,28 +51,7 @@ public class UserResponseTests
         Assert.Equal(string.Empty, response.Email);
         Assert.Equal(string.Empty, response.CompanyName);
     }
-
-    [Fact]
-    public void FromDomain_WithDefaultGuid_ShouldMapCorrectly()
-    {
-        // Arrange
-        var User = new User
-        {
-            Id = Guid.Empty,
-            LastName = "Test",
-            FirstName = "Test",
-            Email = "test@test.com",
-            CompanyName = "Test"
-        };
-
-        // Act
-        var response = UserResponse.FromDomain(User);
-
-        // Assert
-        Assert.Equal(Guid.Empty, response.Id);
-        Assert.Equal(Guid.Empty, response.SessionId);
-    }
-
+    
     [Fact]
     public void FromDomain_ShouldReturnNewInstance()
     {

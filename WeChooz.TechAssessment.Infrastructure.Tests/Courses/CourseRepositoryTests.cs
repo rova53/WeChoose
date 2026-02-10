@@ -69,7 +69,10 @@ public class CourseRepositoryTests
         var course = CreateCourse();
         var session = CreateSession(course.Id);
         var User = CreateUser(session.Id);
-        session.Enrollments.Add(new SessionEnroll());
+        session.Enrollments.Add(new SessionEnroll()
+        {
+            User = new User(){ Email = "pierre@test.com"}
+        });
         course.Sessions = [session];
 
         context.Courses.Add(course);
