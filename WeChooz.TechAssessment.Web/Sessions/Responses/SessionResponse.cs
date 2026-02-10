@@ -21,6 +21,6 @@ public class SessionResponse
         StartDate = session.StarDate,
         DeliveryMode = session.DeliveryMode,
         UserCount = session.Users?.Count ?? 0,
-        Course = CourseResponse.FromDomain(session.Course)
+        Course = session.Course != null ? CourseResponse.FromDomain(session.Course) : null
     };
 }
