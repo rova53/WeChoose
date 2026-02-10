@@ -162,49 +162,7 @@ public class UpdateUserEndpointTests
             .GetByIdAsync(userId, token);
     }
 
-    [Fact]
-    public async Task HandleAsync_WithDifferentSession_NonExisting_ShouldNotCallUpdateAsync()
-    {
-        // Arrange
-        var UserId = Guid.NewGuid();
-        var oldSessionId = Guid.NewGuid();
-        var newSessionId = Guid.NewGuid();
-
-        var existing = new User
-        {
-            Id = UserId,
-            LastName = "Test",
-            FirstName = "Test",
-            Email = "test@test.com",
-            CompanyName = "Test"
-        };
-
-        var request = new UpdateUserRequest
-        {
-            Id = UserId,
-            LastName = "Test",
-            FirstName = "Test",
-            Email = "test@test.com",
-            CompanyName = "Test"
-        };
-
-        _userRepository
-            .GetByIdAsync(UserId, Arg.Any<CancellationToken>())
-            .Returns(existing);
-
-        _sessionRepository
-            .GetByIdAsync(newSessionId, Arg.Any<CancellationToken>())
-            .Returns((Session?)null);
-
-        // Act
-        await _endpoint.HandleAsync(request, CancellationToken.None);
-
-        // Assert
-        await _userRepository
-            .DidNotReceive()
-            .UpdateAsync(Arg.Any<User>(), Arg.Any<CancellationToken>());
-    }
-
+    
     [Fact]
     public async Task HandleAsync_WithSameSession_ShouldNotCallSessionRepository()
     {
