@@ -1,4 +1,5 @@
 ﻿using FluentAssertions;
+using Microsoft.EntityFrameworkCore;
 using WeChooz.TechAssessment.Domain.Courses;
 using WeChooz.TechAssessment.Domain.Enroll;
 using WeChooz.TechAssessment.Domain.Users;
@@ -53,7 +54,17 @@ public class UserRepositoryTests
             Session = new Session
             {
                 Id = sessionId, 
-                Course = new Course(){ Name = "Formation"}
+                Course = new Course()
+                {
+                    Name = "Formation",
+                    ShortDescription = "Chapo",
+                    LongDescription = "Description",
+                    DurationInDays = 1,
+                    TargetAudience = TargetAudience.CseElected,
+                    MaxCapacity = 10,
+                    TrainerFirstName = "A",
+                    TrainerLastName = "B"
+                }
             }
         }
         ]
@@ -150,18 +161,16 @@ public class UserRepositoryTests
     {
         using var context = DbContextFactory.Create();
         var repo = new UserRepository(context);
-
-        var (course, session) = CreateCourseAndSession();
-        var User = CreateUser(session.Id);
-
-        context.Courses.Add(course);
-        context.Sessions.Add(session);
+        var User = CreateUser(Guid.NewGuid());
         context.Users.Add(User);
         await context.SaveChangesAsync();
+        
+        var attachedUser = await context.Users.FirstOrDefaultAsync(u => u.Id == User.Id);
+        attachedUser.Should().NotBeNull();
 
-        await repo.DeleteAsync(User.Id);
+        await repo.DeleteAsync(attachedUser.Id);
 
-        var deleted = await repo.GetByIdAsync(User.Id);
+        var deleted = await repo.GetByIdAsync(attachedUser.Id);
         deleted.Should().BeNull();
     }
 
