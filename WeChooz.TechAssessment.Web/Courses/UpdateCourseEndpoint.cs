@@ -1,5 +1,7 @@
-﻿using Microsoft.AspNetCore.Mvc;
+﻿using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Mvc;
 using WeChooz.TechAssessment.Domain.Courses;
+using WeChooz.TechAssessment.Domain.Users;
 using WeChooz.TechAssessment.Web.Courses.Requests;
 using WeChooz.TechAssessment.Web.Courses.Responses;
 
@@ -17,7 +19,7 @@ public class UpdateCourseEndpoint : Ardalis.ApiEndpoints
         _courseRepository = courseRepository;
     }
 
-    [HttpPut("{id:guid}")]
+    [HttpPut("{id:guid}"), Authorize(Roles = $", {nameof(PolicyRoles.Formation)}")]
     public override async Task<ActionResult<CourseResponse>> HandleAsync(
         [FromBody] UpdateCourseRequest request, 
         CancellationToken cancellationToken = default)

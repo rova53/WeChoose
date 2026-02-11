@@ -1,5 +1,7 @@
-﻿using Microsoft.AspNetCore.Mvc;
+﻿using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Mvc;
 using WeChooz.TechAssessment.Domain.Sessions;
+using WeChooz.TechAssessment.Domain.Users;
 
 namespace WeChooz.TechAssessment.Web.Sessions;
 
@@ -16,7 +18,7 @@ public class DeleteSessionEndpoint : Ardalis.ApiEndpoints
         _sessionRepository = sessionRepository;
     }
 
-    [HttpDelete("{id:guid}")]
+    [HttpDelete("{id:guid}"), Authorize(Roles = $", {nameof(PolicyRoles.Formation)}")]
     public override async Task<ActionResult> HandleAsync(
         [FromRoute] Guid id, 
         CancellationToken cancellationToken = default)

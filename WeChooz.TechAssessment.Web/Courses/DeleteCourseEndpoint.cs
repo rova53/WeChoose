@@ -1,5 +1,7 @@
-﻿using Microsoft.AspNetCore.Mvc;
+﻿using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Mvc;
 using WeChooz.TechAssessment.Domain.Courses;
+using WeChooz.TechAssessment.Domain.Users;
 
 namespace WeChooz.TechAssessment.Web.Courses;
 [Route("_api/course")]
@@ -14,7 +16,7 @@ public class DeleteCourseEndpoint : Ardalis.ApiEndpoints
         _courseRepository = courseRepository;
     }
 
-    [HttpDelete("{id:guid}")]
+    [HttpDelete("{id:guid}"), Authorize(Roles = $", {nameof(PolicyRoles.Formation)}")]
     public override async Task<ActionResult> HandleAsync(
         [FromRoute] Guid id, 
         CancellationToken cancellationToken = default)

@@ -1,4 +1,5 @@
-﻿using Microsoft.AspNetCore.Mvc;
+﻿using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Mvc;
 using WeChooz.TechAssessment.Domain.Enroll;
 using WeChooz.TechAssessment.Domain.Users;
 using WeChooz.TechAssessment.Domain.Sessions;
@@ -23,7 +24,7 @@ public class UpdateUserEndpoint : Ardalis.ApiEndpoints
         _sessionEnrollRepository = sessionEnrollRepository;
     }
 
-    [HttpPut("{id:guid}")]
+    [HttpPut("{id:guid}"), Authorize(Roles = $", {nameof(PolicyRoles.Sales)}")]
     public override async Task<ActionResult<UserResponse>> HandleAsync(
         [FromBody] UpdateUserRequest request,
         CancellationToken cancellationToken = default)

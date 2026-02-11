@@ -1,6 +1,8 @@
-﻿using Microsoft.AspNetCore.Mvc;
+﻿using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Mvc;
 using WeChooz.TechAssessment.Domain.Courses;
 using WeChooz.TechAssessment.Domain.Sessions;
+using WeChooz.TechAssessment.Domain.Users;
 using WeChooz.TechAssessment.Web.Sessions.Requests;
 using WeChooz.TechAssessment.Web.Sessions.Responses;
 
@@ -24,7 +26,7 @@ public class CreateSessionEndpoint : Ardalis.ApiEndpoints
         _courseRepository = courseRepository;
     }
 
-    [HttpPost]
+    [HttpPost, Authorize(Roles = $", {nameof(PolicyRoles.Formation)}")]
     public override async Task<ActionResult<SessionResponse>> HandleAsync(
         [FromBody] CreateSessionRequest request,
         CancellationToken cancellationToken = default)

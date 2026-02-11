@@ -1,10 +1,12 @@
-﻿using Microsoft.EntityFrameworkCore.Migrations;
+﻿using System.Diagnostics.CodeAnalysis;
+using Microsoft.EntityFrameworkCore.Migrations;
 using WeChooz.TechAssessment.Domain.Users;
 
 #nullable disable
 
 namespace WeChooz.TechAssessment.Infrastructure.Persistence.Migrations
 {
+    [ExcludeFromCodeCoverage]
     /// <inheritdoc />
     public partial class add_formation_sales_users : Migration
     {

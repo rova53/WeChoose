@@ -1,9 +1,11 @@
-﻿using Microsoft.EntityFrameworkCore.Migrations;
+﻿using System.Diagnostics.CodeAnalysis;
+using Microsoft.EntityFrameworkCore.Migrations;
 using BC = BCrypt.Net.BCrypt;
 #nullable disable
 
 namespace WeChooz.TechAssessment.Infrastructure.Persistence.Migrations
 {
+    [ExcludeFromCodeCoverage]
     /// <inheritdoc />
     public partial class add_user_users : Migration
     {
