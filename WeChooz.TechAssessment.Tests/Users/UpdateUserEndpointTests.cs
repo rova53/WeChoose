@@ -1,5 +1,6 @@
 ﻿using Microsoft.AspNetCore.Mvc;
 using NSubstitute;
+using WeChooz.TechAssessment.Domain.Enroll;
 using WeChooz.TechAssessment.Domain.Users;
 using WeChooz.TechAssessment.Domain.Sessions;
 using WeChooz.TechAssessment.Web.Users;
@@ -11,14 +12,14 @@ namespace WeChooz.TechAssessment.Tests.Users;
 public class UpdateUserEndpointTests
 {
     private readonly IUserRepository _userRepository;
-    private readonly ISessionRepository _sessionRepository;
+    private readonly ISessionEnrollRepository _sessionEnrollRepository;
     private readonly UpdateUserEndpoint _endpoint;
 
     public UpdateUserEndpointTests()
     {
         _userRepository = Substitute.For<IUserRepository>();
-        _sessionRepository = Substitute.For<ISessionRepository>();
-        _endpoint = new UpdateUserEndpoint(_userRepository, _sessionRepository);
+        _sessionEnrollRepository = Substitute.For<ISessionEnrollRepository>();
+        _endpoint = new UpdateUserEndpoint(_userRepository, _sessionEnrollRepository);
     }
 
     [Fact]
@@ -160,49 +161,6 @@ public class UpdateUserEndpointTests
         await _userRepository
             .Received(1)
             .GetByIdAsync(userId, token);
-    }
-
-    
-    [Fact]
-    public async Task HandleAsync_WithSameSession_ShouldNotCallSessionRepository()
-    {
-        // Arrange
-        var UserId = Guid.NewGuid();
-        var sessionId = Guid.NewGuid();
-
-        var existing = new User
-        {
-            Id = UserId,
-            LastName = "Test",
-            FirstName = "Test",
-            Email = "test@test.com",
-            CompanyName = "Test"
-        };
-
-        var request = new UpdateUserRequest
-        {
-            Id = UserId,
-            LastName = "Updated",
-            FirstName = "Updated",
-            Email = "updated@test.com",
-            CompanyName = "Updated"
-        };
-
-        _userRepository
-            .GetByIdAsync(UserId, Arg.Any<CancellationToken>())
-            .Returns(existing);
-
-        _userRepository
-            .UpdateAsync(Arg.Any<User>(), Arg.Any<CancellationToken>())
-            .Returns(callInfo => callInfo.Arg<User>());
-
-        // Act
-        await _endpoint.HandleAsync(request, CancellationToken.None);
-
-        // Assert
-        await _sessionRepository
-            .DidNotReceive()
-            .GetByIdAsync(Arg.Any<Guid>(), Arg.Any<CancellationToken>());
     }
 
    [Fact]

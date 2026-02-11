@@ -6,7 +6,7 @@ using WeChooz.TechAssessment.Web.Sessions.Responses;
 
 namespace WeChooz.TechAssessment.Web.Sessions;
 
-[Route("_api/sessions")]
+[Route("_api/session")]
 public class UpdateSessionEndpoint : Ardalis.ApiEndpoints
     .EndpointBaseAsync
     .WithRequest<UpdateSessionRequest>
@@ -43,10 +43,12 @@ public class UpdateSessionEndpoint : Ardalis.ApiEndpoints
         {
             CourseId = request.CourseId,
             StarDate = request.StartDate,
-            DeliveryMode = request.DeliveryMode
+            DeliveryMode = request.DeliveryMode,
+            Course = null  
         };
 
         var result = await _sessionRepository.UpdateAsync(updated, cancellationToken);
+        result.Course = course;
         return Ok(SessionResponse.FromDomain(result));
     }
 }

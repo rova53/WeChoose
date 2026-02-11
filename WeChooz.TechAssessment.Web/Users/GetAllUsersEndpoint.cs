@@ -24,7 +24,7 @@ public class GetAllUsersEndpoint : Ardalis.ApiEndpoints
         var users = await _userRepository.GetAllAsync(
             cancellationToken);
         var response = users.Select(
-            UserResponse.FromDomain);
+            UserResponse.FromDomain).ToList();
         return Ok(response);
     }
 }

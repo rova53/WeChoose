@@ -15,6 +15,7 @@ public class SessionRepository : BaseRepository<Session>, ISessionRepository
     public override async Task<Session?> GetByIdAsync(Guid id, CancellationToken cancellationToken = default)
     {
         return await DbSet
+            .AsNoTracking()
             .Include(s => s.Course)
             .Include(s => s.Enrollments)
             .ThenInclude(e => e.User)

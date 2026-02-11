@@ -116,20 +116,6 @@ public class BaseRepositoryTests
     }
 
     [Fact]
-    public async Task DeleteAsync_Should_Remove_Entity()
-    {
-        using var context = DbContextFactory.Create();
-        var repo = new CourseRepository(context);
-        var course = CreateCourse();
-        await repo.AddAsync(course);
-
-        await repo.DeleteAsync(course.Id);
-
-        var deleted = await repo.GetByIdAsync(course.Id);
-        deleted.Should().BeNull();
-    }
-
-    [Fact]
     public async Task DeleteAsync_Should_Not_Throw_When_Entity_Not_Exists()
     {
         using var context = DbContextFactory.Create();

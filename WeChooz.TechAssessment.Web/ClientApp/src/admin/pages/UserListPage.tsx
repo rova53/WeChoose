@@ -1,108 +1,112 @@
-import React, { useState, useMemo } from 'react';
+import React, { useState, useCallback } from 'react';
 import { Container, Paper, Typography, Button, Box, Tabs, Tab } from '@mui/material';
-import AddIcon from '@mui/icons-material/Add';
+import LogoutIcon from '@mui/icons-material/Logout';
 import { UserDataGrid } from '../components/users/UserDataGrid';
 import { useDeleteUser } from '../../hooks/users/useDeleteUser';
 import { useGetAllUsers } from '../../hooks/users/useGetAllUsers';
-import { CreateUserModal } from '../components/users/CreateUserModal';
 import { useNavigate } from 'react-router-dom';
+import { useCurrentUser } from '../../hooks/auth/useCurrentUser';
 
 export const UserListPage: React.FC = () => {
-    const { mutate: deleteUser, loading: deleting } = useDeleteUser();
-    const [isModalOpen, setIsModalOpen] = useState(false);
     const navigate = useNavigate();
+    const { logout } = useCurrentUser();
+    const { mutate: deleteUser, loading: deleting } = useDeleteUser();
+
+    // On récupère les données et la fonction de rafraîchissement
+    const { users = [], refetch } = useGetAllUsers();
+
     const [activeTab, setActiveTab] = useState(2);
-    const [refreshKey, setRefreshKey] = useState(0);
 
-    const { users, loading, refetch } = useGetAllUsers();
+    const handleLogout = () => {
+        logout();
+        navigate('/login');
+    };
 
-    const fetchUsers = useMemo(() => {
-        return async (params: { page: number; pageSize: number; search: string }) => {
-            let filtered = users;
-            if (params.search) {
-                const searchLower = params.search.toLowerCase();
-                filtered = users.filter(u =>
-                    u.lastName.toLowerCase().includes(searchLower) ||
-                    u.firstName.toLowerCase().includes(searchLower) ||
-                    u.email.toLowerCase().includes(searchLower) ||
-                    (u.companyName || '').toLowerCase().includes(searchLower)
-                );
-            }
-            // Only send first letter of firstName
-            const mapped = filtered.map(u => ({ ...u, firstName: u.firstName ? u.firstName[0] : '' }));
-            const start = (params.page - 1) * params.pageSize;
-            const end = start + params.pageSize;
-            const items = mapped.slice(start, end);
-            return {
-                items,
-                total: mapped.length
-            };
+    /**
+     * Cette fonction fait le pont entre les données brutes de useGetAllUsers
+     * et les besoins de pagination/recherche du DataGrid.
+     */
+    const fetchUsers = useCallback(async (params: { page: number; pageSize: number; search: string }) => {
+        // 1. On applique le filtre de recherche
+        let filtered = [...users];
+        if (params.search) {
+            const searchLower = params.search.toLowerCase();
+            filtered = users.filter(u =>
+                u.lastName.toLowerCase().includes(searchLower) ||
+                u.firstName.toLowerCase().includes(searchLower) ||
+                u.email.toLowerCase().includes(searchLower) ||
+                (u.companyName || '').toLowerCase().includes(searchLower)
+            );
+        }
+
+        // 2. On applique la pagination locale
+        const start = (params.page - 1) * params.pageSize;
+        const end = start + params.pageSize;
+        const items = filtered.slice(start, end);
+
+        return {
+            items,
+            total: filtered.length
         };
-    }, [users, refreshKey]);
+    }, [users]); // Se déclenche quand 'users' change (après un refetch)
 
     const handleTabChange = (_: React.SyntheticEvent, value: number) => {
         setActiveTab(value);
-        if (value === 0) navigate('/admin/courses');
-        if (value === 1) navigate('/admin/sessions');
-        if (value === 2) navigate('/admin/users');
+        const routes = ['/admin/courses', '/admin/sessions', '/admin/users'];
+        navigate(routes[value]);
     };
 
     const handleDelete = async (id: string) => {
-        if (window.confirm('Êtes-vous sûr de vouloir supprimer cet utilisateur ?')) {
-            const result = await deleteUser(id);
-            if (result !== null) {
-                setRefreshKey(prev => prev + 1);
-                refetch();
-            }
+        try {
+            await deleteUser(id);
+            await refetch(); // Force la mise à jour de la liste locale
+        } catch (error) {
+            console.error("Erreur lors de la suppression:", error);
         }
-    };
-
-    const handleCreateSuccess = () => {
-        setIsModalOpen(false);
-        setRefreshKey(prev => prev + 1);
-        refetch();
     };
 
     return (
         <Container maxWidth="lg" sx={{ mt: 4, mb: 4 }}>
-            {/* Tabs Navigation */}
-            <Box sx={{ borderBottom: 1, borderColor: 'divider', mb: 3 }}>
+            {/* Barre de navigation haute */}
+            <Box sx={{
+                borderBottom: 1,
+                borderColor: 'divider',
+                mb: 3,
+                display: 'flex',
+                justifyContent: 'space-between',
+                alignItems: 'center'
+            }}>
                 <Tabs value={activeTab} onChange={handleTabChange}>
                     <Tab label="Cours" />
                     <Tab label="Sessions" />
                     <Tab label="Utilisateurs" />
                 </Tabs>
+
+                <Button
+                    variant="text"
+                    color="error"
+                    startIcon={<LogoutIcon />}
+                    onClick={handleLogout}
+                    sx={{ fontWeight: 'bold' }}
+                >
+                    Déconnexion
+                </Button>
             </Box>
 
-            {/* Content */}
-            <Paper sx={{ p: 3 }}>
-                <Box sx={{ display: 'flex', justifyContent: 'space-between', mb: 3 }}>
-                    <Typography variant="h4" component="h1">
-                        Liste des Utilisateurs
+            <Paper sx={{ p: 3, borderRadius: 2, boxShadow: 3 }}>
+                <Box sx={{ mb: 3 }}>
+                    <Typography variant="h4" component="h1" sx={{ fontWeight: 'bold', color: 'text.primary' }}>
+                        Gestion des Utilisateurs
                     </Typography>
-                    <Button
-                        variant="contained"
-                        startIcon={<AddIcon />}
-                        onClick={() => setIsModalOpen(true)}
-                    >
-                        Créer Nouvel Utilisateur
-                    </Button>
+                    <Typography variant="body2" color="text.secondary">
+                        Créez, modifiez ou supprimez les comptes utilisateurs et leurs inscriptions.
+                    </Typography>
                 </Box>
-
                 <UserDataGrid
-                    key={refreshKey}
                     fetchUsers={fetchUsers}
-                    onDelete={handleDelete}
-                    isDeleting={deleting}
+                    onSuccess={() => refetch()}
                 />
             </Paper>
-
-            {isModalOpen && (
-                <CreateUserModal
-                    onClose={() => setIsModalOpen(false)}
-                    onSuccess={handleCreateSuccess}
-                />
-            )}
         </Container>
     );
 };

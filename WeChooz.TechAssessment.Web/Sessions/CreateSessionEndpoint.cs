@@ -6,7 +6,7 @@ using WeChooz.TechAssessment.Web.Sessions.Responses;
 
 namespace WeChooz.TechAssessment.Web.Sessions;
 
-[Route("_api/sessions")]
+[Route("_api/session")]
 public class CreateSessionEndpoint : Ardalis.ApiEndpoints
     .EndpointBaseAsync
     .WithRequest<CreateSessionRequest>
@@ -44,6 +44,6 @@ public class CreateSessionEndpoint : Ardalis.ApiEndpoints
         var created = await _sessionRepository.AddAsync(session, cancellationToken);
 
         var result = await _sessionRepository.GetByIdAsync(created.Id, cancellationToken);
-        return CreatedAtAction(nameof(GetSessionByIdEndpoint), new { id = created.Id }, SessionResponse.FromDomain(result!));
+        return Created($"_api/session/${created.Id }", SessionResponse.FromDomain(result!));
     }
 }

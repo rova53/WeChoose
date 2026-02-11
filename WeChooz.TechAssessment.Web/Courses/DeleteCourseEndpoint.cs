@@ -2,7 +2,7 @@
 using WeChooz.TechAssessment.Domain.Courses;
 
 namespace WeChooz.TechAssessment.Web.Courses;
-[Route("_api/courses")]
+[Route("_api/course")]
 public class DeleteCourseEndpoint : Ardalis.ApiEndpoints
     .EndpointBaseAsync
     .WithRequest<Guid>

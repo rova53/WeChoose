@@ -20,7 +20,7 @@ namespace WeChooz.TechAssessment.Infrastructure.Persistence.Migrations
                         Guid.NewGuid().ToString(), 
                         "F", 
                         "Form", 
-                        "formation@test.com", 
+                        "formation", 
                         "TestFormation", 
                         $"{(int)(PolicyRoles.Formation)}",
                         ""
@@ -29,7 +29,7 @@ namespace WeChooz.TechAssessment.Infrastructure.Persistence.Migrations
                         Guid.NewGuid().ToString(), 
                         "S", 
                         "Sales", 
-                        "sales@test.com", 
+                        "sales", 
                         "TestSales", 
                         $"{(int)PolicyRoles.Sales}",
                         ""

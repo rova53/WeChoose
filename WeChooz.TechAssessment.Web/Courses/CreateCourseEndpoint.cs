@@ -5,7 +5,7 @@ using WeChooz.TechAssessment.Web.Courses.Responses;
 
 namespace WeChooz.TechAssessment.Web.Courses;
 
-[Route("_api/courses")]
+[Route("_api/course")]
 public class CreateCourseEndpoint : Ardalis.ApiEndpoints
     .EndpointBaseAsync
     .WithRequest<CreateCourseRequest>
@@ -34,7 +34,6 @@ public class CreateCourseEndpoint : Ardalis.ApiEndpoints
         };
 
         var created = await _courseRepository.AddAsync(course, cancellationToken);
-        return CreatedAtAction(nameof(GetCourseByIdEndpoint), 
-            new { id = created.Id }, CourseResponse.FromDomain(created));
+        return Created($"_api/course/{created.Id}", CourseResponse.FromDomain(created));
     }
 }

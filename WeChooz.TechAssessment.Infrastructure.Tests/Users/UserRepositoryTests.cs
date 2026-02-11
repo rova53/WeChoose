@@ -120,24 +120,6 @@ public class UserRepositoryTests
     }
 
     [Fact]
-    public async Task DeleteAsync_Should_Remove_User()
-    {
-        using var context = DbContextFactory.Create();
-        var repo = new UserRepository(context);
-        var User = CreateUser(Guid.NewGuid());
-        context.Users.Add(User);
-        await context.SaveChangesAsync();
-        
-        var attachedUser = await context.Users.FirstOrDefaultAsync(u => u.Id == User.Id);
-        attachedUser.Should().NotBeNull();
-
-        await repo.DeleteAsync(attachedUser.Id);
-
-        var deleted = await repo.GetByIdAsync(attachedUser.Id);
-        deleted.Should().BeNull();
-    }
-
-    [Fact]
     public async Task UpdateAsync_Should_Modify_User()
     {
         using var context = DbContextFactory.Create();

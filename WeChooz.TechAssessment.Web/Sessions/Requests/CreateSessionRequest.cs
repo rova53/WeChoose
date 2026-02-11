@@ -5,7 +5,7 @@ namespace WeChooz.TechAssessment.Web.Sessions.Requests;
 [ExcludeFromCodeCoverage]
 public class CreateSessionRequest
 {
-    public required Guid CourseId { get; set; }
-    public required DateOnly StartDate { get; set; }
-    public required DeliveryMode DeliveryMode { get; set; }
+    public Guid CourseId { get; set; }
+    public DateOnly StartDate { get; set; }
+    public DeliveryMode DeliveryMode { get; set; }
 }

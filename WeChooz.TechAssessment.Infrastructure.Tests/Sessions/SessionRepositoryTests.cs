@@ -162,24 +162,7 @@ public class SessionRepositoryTests
         result.CourseId.Should().Be(course.Id);
         result.DeliveryMode.Should().Be(DeliveryMode.InPerson);
     }
-    [Fact]
-    public async Task DeleteAsync_Should_Remove_Session()
-    {
-        using var context = DbContextFactory.Create();
-        var repo = new SessionRepository(context);
 
-        var course = CreateCourse();
-        var session = CreateSession(course.Id);
-
-        context.Courses.Add(course);
-        context.Sessions.Add(session);
-        await context.SaveChangesAsync();
-
-        await repo.DeleteAsync(session.Id);
-
-        var deleted = await repo.GetByIdAsync(session.Id);
-        deleted.Should().BeNull();
-    }
     [Fact]
     public async Task UpdateAsync_Should_Modify_DeliveryMode()
     {

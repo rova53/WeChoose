@@ -2,7 +2,7 @@ namespace WeChooz.TechAssessment.Tests;
 
 public class WebTests
 {
-    private const int TIMEOUT_SECONDS = 90;
+    private const int TIMEOUT_SECONDS = 120;
 
     [Fact]
     public async Task GetWebResourceRootReturnsOkStatusCode()

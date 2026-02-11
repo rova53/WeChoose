@@ -4,7 +4,7 @@ using WeChooz.TechAssessment.Web.Courses.Responses;
 
 namespace WeChooz.TechAssessment.Web.Courses;
 
-[Route("_api/courses")]
+[Route("_api/course")]
 public class GetCourseByIdEndpoint : Ardalis.ApiEndpoints
     .EndpointBaseAsync
     .WithRequest<Guid>

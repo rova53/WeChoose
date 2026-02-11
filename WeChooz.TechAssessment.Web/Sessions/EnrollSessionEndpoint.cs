@@ -8,7 +8,7 @@ using WeChooz.TechAssessment.Web.Sessions.Requests;
 
 namespace WeChooz.TechAssessment.Web.Sessions;
 
-[Route("_api/sessions")]
+[Route("_api/session")]
 [Authorize]
 public class EnrollSessionEndpoint : EndpointBaseAsync
     .WithRequest<EnrollSessionRequest>

@@ -1,101 +1,99 @@
-import React, { useState, useMemo } from 'react';
-import { Container, Paper, Typography, Button, Box, Tabs, Tab } from '@mui/material';
-import AddIcon from '@mui/icons-material/Add';
-import { useGetAllCourses } from '../../hooks/courses/useGetAllCourses';
-import { useDeleteCourse } from '../../hooks/courses/useDeleteCourse';
-import { CreateCourseModal } from '../components/courses/CreateCourseModal';
+import React, { useState, useCallback } from 'react';
+import { Container, Paper, Typography, Box, Tabs, Tab, Button } from '@mui/material';
+import LogoutIcon from '@mui/icons-material/Logout';
 import { CourseDataGrid } from '../components/courses/CourseDataGrid';
+import { useGetAllCourses } from '../../hooks/courses/useGetAllCourses';
 import { useNavigate } from 'react-router-dom';
+import { useCurrentUser } from '../../hooks/auth/useCurrentUser';
 
 export const CourseListPage: React.FC = () => {
-    const { courses = [], loading, error, refetch } = useGetAllCourses();
-    const { mutate: deleteCourse, loading: deleting } = useDeleteCourse();
-    const [isModalOpen, setIsModalOpen] = useState(false);
     const navigate = useNavigate();
-    const [activeTab, setActiveTab] = useState(0);
-    const [refreshKey, setRefreshKey] = useState(0);
+    const { logout } = useCurrentUser();
+    const [activeTab, setActiveTab] = useState(0); // 0 pour l'index des Cours
 
-    const fetchCourses = useMemo(() => {
-        return async (params: { page: number; pageSize: number; search: string }) => {
-            let filtered = courses;
-            if (params.search) {
-                const searchLower = params.search.toLowerCase();
-                filtered = courses.filter(c =>
-                    c.name.toLowerCase().includes(searchLower)
-                );
-            }
-            const start = (params.page - 1) * params.pageSize;
-            const end = start + params.pageSize;
-            const items = filtered.slice(start, end);
+    // Récupération des données et fonction refetch
+    const { courses = [], refetch } = useGetAllCourses();
 
-            return {
-                items,
-                total: filtered.length
-            };
-        };
-    }, [courses, refreshKey]);
+    const handleLogout = () => {
+        logout();
+        navigate('/login');
+    };
 
-    const handleDelete = async (id: string) => {
-        if (window.confirm('Êtes-vous sûr de vouloir supprimer ce cours ?')) {
-            await deleteCourse(id);
-            setRefreshKey(prev => prev + 1);
-            refetch();
+    /**
+     * Pont entre les données brutes et les besoins du DataGrid
+     * (Pagination et recherche locales)
+     */
+    const fetchCourses = useCallback(async (params: { page: number; pageSize: number; search: string }) => {
+        let filtered = [...courses];
+
+        if (params.search) {
+            const searchLower = params.search.toLowerCase();
+            filtered = courses.filter(c =>
+                c.name.toLowerCase().includes(searchLower) ||
+                (c.targetAudience && c.targetAudience.toLowerCase().includes(searchLower))
+            );
         }
-    };
 
-    const handleCreateSuccess = () => {
-        setIsModalOpen(false);
-        setRefreshKey(prev => prev + 1);
-        refetch();
-    };
+        const start = (params.page - 1) * params.pageSize;
+        const end = start + params.pageSize;
+        const items = filtered.slice(start, end);
+
+        return {
+            items,
+            total: filtered.length
+        };
+    }, [courses]);
 
     const handleTabChange = (_: React.SyntheticEvent, value: number) => {
         setActiveTab(value);
-        if (value === 0) navigate('/admin/courses');
-        if (value === 1) navigate('/admin/sessions');
-        if (value === 2) navigate('/admin/users');
+        const routes = ['/admin/courses', '/admin/sessions', '/admin/users'];
+        navigate(routes[value]);
     };
 
     return (
         <Container maxWidth="lg" sx={{ mt: 4, mb: 4 }}>
-            {/* Tabs Navigation */}
-            <Box sx={{ borderBottom: 1, borderColor: 'divider', mb: 3 }}>
+            {/* Barre de navigation haute */}
+            <Box sx={{
+                borderBottom: 1,
+                borderColor: 'divider',
+                mb: 3,
+                display: 'flex',
+                justifyContent: 'space-between',
+                alignItems: 'center'
+            }}>
                 <Tabs value={activeTab} onChange={handleTabChange}>
                     <Tab label="Cours" />
                     <Tab label="Sessions" />
                     <Tab label="Utilisateurs" />
                 </Tabs>
+
+                <Button
+                    variant="text"
+                    color="error"
+                    startIcon={<LogoutIcon />}
+                    onClick={handleLogout}
+                    sx={{ fontWeight: 'bold' }}
+                >
+                    Déconnexion
+                </Button>
             </Box>
 
-            {/* Content */}
-            <Paper sx={{ p: 3 }}>
-                <Box sx={{ display: 'flex', justifyContent: 'space-between', mb: 3 }}>
-                    <Typography variant="h4" component="h1">
+            {/* Contenu principal */}
+            <Paper sx={{ p: 3, borderRadius: 2, boxShadow: 3 }}>
+                <Box sx={{ mb: 3 }}>
+                    <Typography variant="h4" component="h1" sx={{ fontWeight: 'bold', color: 'text.primary' }}>
                         Catalogue des Cours
                     </Typography>
-                    <Button
-                        variant="contained"
-                        startIcon={<AddIcon />}
-                        onClick={() => setIsModalOpen(true)}
-                    >
-                        Nouveau Cours
-                    </Button>
+                    <Typography variant="body2" color="text.secondary">
+                        Gérez le contenu pédagogique, définissez les populations cibles et les durées de formation.
+                    </Typography>
                 </Box>
 
                 <CourseDataGrid
-                    key={refreshKey}
                     fetchCourses={fetchCourses}
-                    onDelete={handleDelete}
-                    isDeleting={deleting}
+                    onSuccess={() => refetch()}
                 />
             </Paper>
-
-            {isModalOpen && (
-                <CreateCourseModal
-                    onClose={() => setIsModalOpen(false)}
-                    onSuccess={handleCreateSuccess}
-                />
-            )}
         </Container>
     );
 };

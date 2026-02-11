@@ -4,7 +4,7 @@ using WeChooz.TechAssessment.Web.Sessions.Responses;
 
 namespace WeChooz.TechAssessment.Web.Sessions;
 
-[Route("_api/sessions")]
+[Route("_api/session")]
 public class GetSessionByIdEndpoint : Ardalis.ApiEndpoints
     .EndpointBaseAsync
     .WithRequest<Guid>

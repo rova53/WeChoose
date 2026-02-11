@@ -1,4 +1,5 @@
 ﻿using Microsoft.AspNetCore.Mvc;
+using WeChooz.TechAssessment.Domain.Enroll;
 using WeChooz.TechAssessment.Domain.Users;
 using WeChooz.TechAssessment.Domain.Sessions;
 using WeChooz.TechAssessment.Web.Users.Requests;
@@ -12,14 +13,14 @@ public class UpdateUserEndpoint : Ardalis.ApiEndpoints
     .WithActionResult<UserResponse>
 {
     private readonly IUserRepository _userRepository;
-    private readonly ISessionRepository _sessionRepository;
+    private readonly ISessionEnrollRepository _sessionEnrollRepository;
 
     public UpdateUserEndpoint(
         IUserRepository userRepository,
-        ISessionRepository sessionRepository)
+        ISessionEnrollRepository sessionEnrollRepository)
     {
         _userRepository = userRepository;
-        _sessionRepository = sessionRepository;
+        _sessionEnrollRepository = sessionEnrollRepository;
     }
 
     [HttpPut("{id:guid}")]
@@ -31,13 +32,31 @@ public class UpdateUserEndpoint : Ardalis.ApiEndpoints
             request.Id, cancellationToken);
         if (existing is null)
             return NotFound();
+        var existEnrollement = await _sessionEnrollRepository.FindByUserAsync(request.Id);
+        var newEnrollement = request.enrollments
+            .Select(i =>
+                new SessionEnroll {
+                    SessionId = i.SessionId,
+                    EnrollmentDate = DateTime.UtcNow,
+                }).ToList();
+        
+        var toremove = newEnrollement
+            .Where(e => existEnrollement.Any(n => n.SessionId == e.SessionId))
+            .ToList();
 
+        foreach (var item in toremove)
+        {
+            newEnrollement.Remove(item);
+        }
         var updated = existing with
         {
+            
             LastName = request.LastName,
             FirstName = request.FirstName,
             Email = request.Email,
-            CompanyName = request.CompanyName
+            CompanyName = request.CompanyName,
+            Password = request.Password,
+            Enrollments = newEnrollement
         };
 
         var result = await _userRepository.UpdateAsync(

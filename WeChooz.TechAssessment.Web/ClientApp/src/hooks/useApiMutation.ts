@@ -28,7 +28,6 @@ export const useApiMutation = <TData, TVariables>(
                 window.location.href = '/login';
                 return null;
             }
-            // Récupération du message d'erreur personnalisé
             let errorMessage = "Une erreur est survenue.";
             if (err?.response) {
                 try {

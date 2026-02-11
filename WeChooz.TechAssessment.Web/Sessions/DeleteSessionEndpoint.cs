@@ -3,7 +3,7 @@ using WeChooz.TechAssessment.Domain.Sessions;
 
 namespace WeChooz.TechAssessment.Web.Sessions;
 
-[Route("_api/sessions")]
+[Route("_api/session")]
 public class DeleteSessionEndpoint : Ardalis.ApiEndpoints
     .EndpointBaseAsync
     .WithRequest<Guid>

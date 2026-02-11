@@ -82,7 +82,7 @@ const SessionDetailModal = ({ sessionId, onClose }: Props) => {
     );
 
     const { course, deliveryMode, userCount } = session;
-    const remainingPlaces = course.maxCapacity - userCount;
+    const remainingPlaces = userCount;
 
     // Modal d'erreur
     if (errorMessage) {
