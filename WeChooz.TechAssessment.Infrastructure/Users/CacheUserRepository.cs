@@ -1,4 +1,4 @@
-﻿using WeChooz.TechAssessment.Domain.Common;
+using WeChooz.TechAssessment.Domain.Common;
 using WeChooz.TechAssessment.Domain.Users;
 
 namespace WeChooz.TechAssessment.Infrastructure.Users;
@@ -9,7 +9,7 @@ public class CacheUserRepository: IUserRepository
     private readonly IUserRepository _inner;
     private const string Prefix = "Users";
 
-    public CacheUserRepository(UserRepository inner, ICacheService cache)
+    public CacheUserRepository(IUserRepository inner, ICacheService cache)
     {
         _inner = inner;
         _cache = cache;
