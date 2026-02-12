@@ -13,7 +13,7 @@ public class SessionEnrollRepository:BaseRepository<SessionEnroll>,ISessionEnrol
         
     }
 
-    public Task<List<SessionEnroll>> FindByUserAsync(Guid requestId) => 
+    public Task<List<SessionEnroll>> FindByUserAsync(Guid requestId, CancellationToken cancellationToken) => 
         DbSet.AsNoTracking()
-            .Where(s=> s.UserId == requestId).ToListAsync();
+            .Where(s=> s.UserId == requestId).ToListAsync(cancellationToken);
 }

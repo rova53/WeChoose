@@ -33,7 +33,8 @@ public class UpdateUserEndpoint : Ardalis.ApiEndpoints
             request.Id, cancellationToken);
         if (existing is null)
             return NotFound();
-        var existEnrollement = await _sessionEnrollRepository.FindByUserAsync(request.Id);
+        var existEnrollement = await _sessionEnrollRepository
+            .FindByUserAsync(request.Id, cancellationToken);
         var newEnrollement = request.enrollments
             .Select(i =>
                 new SessionEnroll {

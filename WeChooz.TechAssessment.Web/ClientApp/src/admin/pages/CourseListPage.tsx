@@ -11,18 +11,13 @@ export const CourseListPage: React.FC = () => {
     const { logout } = useCurrentUser();
     const [activeTab, setActiveTab] = useState(0); // 0 pour l'index des Cours
 
-    // Récupération des données et fonction refetch
     const { courses = [], refetch } = useGetAllCourses();
 
     const handleLogout = () => {
         logout();
         navigate('/login');
     };
-
-    /**
-     * Pont entre les données brutes et les besoins du DataGrid
-     * (Pagination et recherche locales)
-     */
+    
     const fetchCourses = useCallback(async (params: { page: number; pageSize: number; search: string }) => {
         let filtered = [...courses];
 
