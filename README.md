@@ -28,7 +28,7 @@ Pour se faire, l'application dispose de deux parties :
 L'interface d'administration require une authentification préalable. Dans le cadre de ce test, deux identifiants sont disponibles (sans mot de passe): `formation` et `sales`.
 Ils permettent de se connecter avec les rôles du même nom.
 
-Le rôle `formation` permet de gérer les cours et les sessions de formation et de gérer les participants à une session, tandis que le rôle `sales` permet uniquement de gérer les participants à une session de formation.
+Le rôle `formation` permet de gérer les cours et les sessions de formation et de gérer les Users à une session, tandis que le rôle `sales` permet uniquement de gérer les Users à une session de formation.
 
 Un cours est défini par les informations suivantes :
 - un nom,
@@ -39,7 +39,7 @@ Un cours est défini par les informations suivantes :
 - une capacité maximale,
 - un formateur (nom et prénom).
 
-Une session est un cours donné à partir d'une date et avec un mode de délivrance (présentiel ou à distance), avec une liste de participants.
+Une session est un cours donné à partir d'une date et avec un mode de délivrance (présentiel ou à distance), avec une liste de Users.
 
 Un parcipant est défini par les informations suivantes :
 - un nom,

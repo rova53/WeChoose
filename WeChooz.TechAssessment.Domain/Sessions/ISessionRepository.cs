@@ -3,7 +3,7 @@ using WeChooz.TechAssessment.Domain.Courses;
 
 namespace WeChooz.TechAssessment.Domain.Sessions;
 
-public interface ISessionRepository: IRepository<Session>
+public interface ISessionRepository : IRepository<Session>
 {
     Task<IReadOnlyCollection<Session>> GetAvailableSessionsAsync(
         TargetAudience? targetAudience = null,
@@ -11,6 +11,6 @@ public interface ISessionRepository: IRepository<Session>
         DateOnly? startDate = null,
         DateOnly? endDate = null,
         CancellationToken cancellationToken = default);
-    
-    Task<Session?> GetByIdWithParticipantsAsync(Guid id, CancellationToken cancellationToken = default);
+
+    Task<Session?> GetByIdWithUsersAsync(Guid id, CancellationToken cancellationToken = default);
 }
