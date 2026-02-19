@@ -1,53 +1,53 @@
 import * as React from 'react';
-import { DataGrid, GridColDef, GridRenderCellParams } from '@mui/x-data-grid';
-import { TextField, Box, Button, IconButton, Tooltip } from '@mui/material';
+import { DataTable, type DataTableColumn } from 'mantine-datatable';
+import { ActionIcon, Tooltip, Group, Text } from '@mantine/core';
+import { IconTrash, IconEdit } from '@tabler/icons-react';
 import { UserDTO } from '../../../services/users/UserDTO';
-import DeleteIcon from '@mui/icons-material/Delete';
-import EditIcon from '@mui/icons-material/Edit';
 import { UserModal } from './UserModal';
-import {useUpdateUser} from "../../../hooks/users/useUpdateUser.ts";
-import {useDeleteUser} from "../../../hooks/users/useDeleteUser.ts";
+import { useDeleteUser } from "../../../hooks/users/useDeleteUser.ts";
+import { TableToolbar } from '../common/TableToolbar';
 
 interface Props {
-    fetchUsers: (params: { page: number; pageSize: number; search: string }) => Promise<{ items: UserDTO[]; total: number }>;
-    onSuccess: () => void
+    users: UserDTO[];
+    loading: boolean;
+    onSuccess: () => void | Promise<void>
 }
 
-export const UserDataGrid: React.FC<Props> = ({ fetchUsers, onSuccess }) => {
-    const [paginationModel, setPaginationModel] = React.useState({ page: 0, pageSize: 10 });
+const PAGE_SIZES = [10, 25, 50];
+
+export const UserDataGrid: React.FC<Props> = ({ users, loading, onSuccess }) => {
+    const [page, setPage] = React.useState(1);
+    const [pageSize, setPageSize] = React.useState(10);
     const [search, setSearch] = React.useState('');
-    const [rows, setRows] = React.useState<UserDTO[]>([]);
-    const [rowCount, setRowCount] = React.useState(0);
-    const [loading, setLoading] = React.useState(false);
     const [isDeleting, setDeleting] = React.useState(false);
     const { mutate: deleteUser } = useDeleteUser();
 
-    // États pour le modal
     const [selectedUser, setSelectedUser] = React.useState<UserDTO | null>(null);
     const [isModalOpen, setIsModalOpen] = React.useState(false);
 
+    const filteredRecords = React.useMemo(() => {
+        let filtered = [...users];
+        if (search) {
+            const searchLower = search.toLowerCase();
+            filtered = filtered.filter(u =>
+                u.lastName.toLowerCase().includes(searchLower) ||
+                u.firstName.toLowerCase().includes(searchLower) ||
+                u.email.toLowerCase().includes(searchLower) ||
+                (u.companyName || '').toLowerCase().includes(searchLower)
+            );
+        }
+        return filtered;
+    }, [users, search]);
 
-    const loadData = React.useCallback(() => {
-        setLoading(true);
-        fetchUsers({
-            page: paginationModel.page + 1,
-            pageSize: paginationModel.pageSize,
-            search
-        })
-            .then(data => {
-                setRows(data.items);
-                setRowCount(data.total);
-                setLoading(false);
-            })
-            .catch((err) => {
-                console.error("Erreur chargement grid:", err);
-                setLoading(false);
-            });
-    }, [paginationModel, search, fetchUsers]);
+    const records = React.useMemo(() => {
+        const start = (page - 1) * pageSize;
+        const end = start + pageSize;
+        return filteredRecords.slice(start, end);
+    }, [filteredRecords, page, pageSize]);
 
-    React.useEffect(() => {
-        loadData();
-    }, [loadData]);
+    const handleSuccess = async () => {
+        await onSuccess();
+    };
 
     const handleOpenCreate = () => {
         setSelectedUser(null);
@@ -59,94 +59,91 @@ export const UserDataGrid: React.FC<Props> = ({ fetchUsers, onSuccess }) => {
         setIsModalOpen(true);
     };
 
-    const columns: GridColDef[] = [
-        { field: 'lastName', headerName: 'Nom', flex: 1, minWidth: 120 },
-        { field: 'firstName', headerName: 'Prénom', flex: 1, minWidth: 120 },
-        { field: 'email', headerName: 'Email', flex: 1.5, minWidth: 180 },
+    const columns: DataTableColumn<UserDTO>[] = [
+        { accessor: 'lastName', title: 'Nom', width: '20%', sortable: true },
+        { accessor: 'firstName', title: 'Prénom', width: '20%', sortable: true },
+        { accessor: 'email', title: 'Email', width: '30%' },
+        { 
+            accessor: 'companyName', 
+            title: 'Entreprise', 
+            width: '20%',
+            render: (record) => record.companyName ? <Text size="sm">{record.companyName}</Text> : <Text size="sm" c="dimmed">-</Text>
+        },
         {
-            field: 'actions',
-            headerName: 'Actions',
-            sortable: false,
-            width: 120,
-            renderCell: (params: GridRenderCellParams<UserDTO>) => (
-                <Box sx={{ display: 'flex', gap: 1, alignItems: 'center', height: '100%' }}>
-                    <Tooltip title="Modifier">
-                        <IconButton
-                            color="primary"
-                            size="small"
-                            onClick={() => handleOpenEdit(params.row)}
+            accessor: 'actions',
+            title: 'Actions',
+            textAlign: 'right',
+            width: 100,
+            render: (record) => (
+                <Group gap="xs" justify="flex-end" wrap="nowrap">
+                    <Tooltip label="Modifier">
+                        <ActionIcon
+                            variant="subtle"
+                            color="blue"
+                            onClick={() => handleOpenEdit(record)}
                         >
-                            <EditIcon fontSize="small" />
-                        </IconButton>
+                            <IconEdit size={16} />
+                        </ActionIcon>
                     </Tooltip>
 
-                    <Tooltip title="Supprimer">
-                        <span>
-                            <IconButton
-                                color="error"
-                                size="small"
-                                disabled={isDeleting}
-                                onClick={() => {
+                    <Tooltip label="Supprimer">
+                        <ActionIcon
+                            variant="subtle"
+                            color="red"
+                            disabled={isDeleting}
+                            onClick={() => {
+                                if (window.confirm(`Supprimer l'utilisateur ${record.firstName} ?`)) {
                                     setDeleting(true);
-                                    if (window.confirm(`Supprimer l'utilisateur ${params.row.firstName} ?`)) {
-                                        console.log("params.row", params.row);
-                                        deleteUser(params.row.id, {
-                                            onSuccess: () => {
-                                                onSuccess();  // ✅ Appelé seulement après succès
-                                                setDeleting(false);
-                                            },
-                                            onError: (error) => {
-                                                console.error(error);
-                                                setDeleting(false);  // ✅ Important de gérer l'erreur aussi
-                                            }
-                                        });
-                                    }else
-                                        setDeleting(false);
-                                }}
-                            >
-                                <DeleteIcon fontSize="small" />
-                            </IconButton>
-                        </span>
+                                    deleteUser(record.id, {
+                                        onSuccess: () => {
+                                            handleSuccess();
+                                            setDeleting(false);
+                                        },
+                                        onError: (error: unknown) => {
+                                            console.error(error);
+                                            setDeleting(false);
+                                        }
+                                    });
+                                }
+                            }}
+                        >
+                            <IconTrash size={16} />
+                        </ActionIcon>
                     </Tooltip>
-                </Box>
+                </Group>
             ),
         },
     ];
 
     return (
-        <Box>
-            <Box sx={{ display: 'flex', gap: 2, mb: 2 }}>
-                <TextField
-                    label="Rechercher..."
-                    variant="outlined"
-                    size="small"
-                    value={search}
-                    onChange={e => setSearch(e.target.value)}
-                    fullWidth
-                    placeholder="Filtrer par nom, prénom, email..."
-                />
-                <Button
-                    variant="contained"
-                    onClick={handleOpenCreate}
-                    startIcon={<EditIcon />}
-                >
-                    Ajouter
-                </Button>
-            </Box>
+        <div>
+            <TableToolbar
+                search={search}
+                onSearchChange={(val) => { setSearch(val); setPage(1); }}
+                onAdd={handleOpenCreate}
+                searchPlaceholder="Filtrer par nom, email..."
+                addButtonLabel="Ajouter un utilisateur"
+            />
 
-            <DataGrid
-                rows={rows}
+            <DataTable
+                withTableBorder
+                borderRadius="md"
+                striped
+                highlightOnHover
+                records={records}
                 columns={columns}
-                pagination
-                paginationMode="server"
-                rowCount={rowCount}
-                paginationModel={paginationModel}
-                onPaginationModelChange={setPaginationModel}
-                loading={loading}
-                autoHeight
-                pageSizeOptions={[5, 10, 25, 50]}
-                disableRowSelectionOnClick
-                localeText={{ noRowsLabel: 'Aucun utilisateur trouvé' }}
+                fetching={loading}
+                totalRecords={filteredRecords.length}
+                recordsPerPage={pageSize}
+                page={page}
+                onPageChange={setPage}
+                recordsPerPageOptions={PAGE_SIZES}
+                onRecordsPerPageChange={(size) => {
+                    setPageSize(size);
+                    setPage(1);
+                }}
+                noRecordsText="Aucun utilisateur trouvé"
+                minHeight={200}
             />
 
             {isModalOpen && (
@@ -158,10 +155,10 @@ export const UserDataGrid: React.FC<Props> = ({ fetchUsers, onSuccess }) => {
                     }}
                     onSuccess={() => {
                         setIsModalOpen(false);
-                        onSuccess(); 
+                        handleSuccess();
                     }}
                 />
             )}
-        </Box>
+        </div>
     );
 };

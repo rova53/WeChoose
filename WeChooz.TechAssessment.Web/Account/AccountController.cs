@@ -25,7 +25,7 @@ public class AccountController : Controller
 
     [HttpGet]
     [AllowAnonymous]
-    public IActionResult Login([FromQuery] string returnUrl = null)
+    public IActionResult Login([FromQuery] string returnUrl = "/")
     {
         if (User.Identity?.IsAuthenticated == true)
         {

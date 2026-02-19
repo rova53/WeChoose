@@ -21,30 +21,42 @@ public class CachedSessionEnrollRepository: ISessionEnrollRepository
         throw new NotImplementedException();
     }
 
-    public Task<SessionEnroll> AddAsync(SessionEnroll entity, CancellationToken cancellationToken = default)
+    public async Task<SessionEnroll> AddAsync(SessionEnroll entity, CancellationToken ct = default)
     {
-        throw new NotImplementedException();
+        var result = await _inner.AddAsync(entity, ct);
+        await _cache.RemoveAsync(Prefix, ct);
+        return result;
     }
 
-    public Task<SessionEnroll> UpdateAsync(SessionEnroll entity, CancellationToken cancellationToken = default)
+    public async Task<SessionEnroll> UpdateAsync(SessionEnroll entity, CancellationToken ct = default)
     {
-        throw new NotImplementedException();
+        var result = await _inner.UpdateAsync(entity, ct);
+        await _cache.RemoveAsync($"{Prefix}:{entity.Id}", ct);
+        await _cache.RemoveAsync($"{Prefix}:all", ct);
+        return result;
     }
 
-    public Task DeleteAsync(Guid id, CancellationToken cancellationToken = default)
+    public async Task DeleteAsync(Guid id, CancellationToken ct = default)
     {
-        throw new NotImplementedException();
+        await _inner.DeleteAsync(id, ct);
+        await _cache.RemoveAsync($"{Prefix}:{id}", ct);
+        await _cache.RemoveAsync($"{Prefix}:all", ct);
     }
 
-    public Task<IEnumerable<SessionEnroll>> GetAllAsync(CancellationToken cancellationToken = default)
+    public async Task<IEnumerable<SessionEnroll>> GetAllAsync(CancellationToken ct = default)
     {
-        throw new NotImplementedException();
+        var key = $"{Prefix}:all";
+        var cached = await _cache.GetAsync<IEnumerable<SessionEnroll>>(key, ct);
+        if (cached is not null) return cached;
+
+        var entities = await _inner.GetAllAsync(ct);
+        var allAsync = entities as SessionEnroll[] ?? entities.ToArray();
+        await _cache.SetAsync(key, allAsync, TimeSpan.FromMinutes(5), ct);
+        return allAsync;
     }
 
-    public Task<int> SaveChangesAsync(CancellationToken cancellationToken = default)
-    {
-        throw new NotImplementedException();
-    }
+    public Task<int> SaveChangesAsync(CancellationToken ct = default)
+        => _inner.SaveChangesAsync(ct);
     public async Task<List<SessionEnroll>> FindByUserAsync(Guid requestId, CancellationToken ct = default)
     {
         var key = $"{Prefix}:findByUser{requestId}";

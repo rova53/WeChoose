@@ -41,7 +41,7 @@ public class CachedCourseRepository : ICourseRepository
     public async Task<Course> AddAsync(Course entity, CancellationToken ct = default)
     {
         var result = await _inner.AddAsync(entity, ct);
-        await _cache.RemoveByPrefixAsync(Prefix, ct);
+        await _cache.RemoveAsync(Prefix, ct);
         return result;
     }
 

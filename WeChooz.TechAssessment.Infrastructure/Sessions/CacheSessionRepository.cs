@@ -30,7 +30,7 @@ public class CacheSessionRepository: ISessionRepository
     public async Task<Session> AddAsync(Session entity, CancellationToken ct = default)
     {
         var result = await _inner.AddAsync(entity, ct);
-        await _cache.RemoveByPrefixAsync(Prefix, ct);
+        await _cache.RemoveAsync(Prefix, ct);
         return result;
     }
 
