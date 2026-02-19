@@ -1,54 +1,57 @@
-import * as React from 'react';
-import { DataTable, type DataTableColumn } from 'mantine-datatable';
-import { ActionIcon, Tooltip, Group, Badge, Text, Progress } from '@mantine/core';
-import { IconTrash, IconEdit } from '@tabler/icons-react';
+import React from 'react';
+import { TextInput, Button, Group, ActionIcon, Tooltip, Badge, Text, Stack } from '@mantine/core';
+import { DataTable } from 'mantine-datatable';
+import { IconEdit, IconTrash, IconPlus, IconSearch } from '@tabler/icons-react';
 import { SessionDTO } from '../../../services/sessions/SessionDTO';
 import { DeliveryMode, deliveryModeLabels } from '../../../services/sessions/DeliveryMode';
 import { SessionModal } from './SessionModal';
 import { useDeleteSession } from '../../../hooks/sessions/useDeleteSession';
-import { TableToolbar } from '../common/TableToolbar';
 
 interface Props {
-    sessions: SessionDTO[];
-    loading: boolean;
-    onSuccess: () => void | Promise<void>;
+    fetchSessions: (params: { page: number; pageSize: number; search: string }) => Promise<{ items: SessionDTO[]; total: number }>;
+    onSuccess: () => void;
+    refreshKey: number;
 }
 
-const PAGE_SIZES = [10, 25, 50];
-
-export const SessionDataGrid: React.FC<Props> = ({ sessions, loading, onSuccess }) => {
+export const SessionDataGrid: React.FC<Props> = ({ fetchSessions, onSuccess, refreshKey }) => {
     const [page, setPage] = React.useState(1);
     const [pageSize, setPageSize] = React.useState(10);
     const [search, setSearch] = React.useState('');
+    const [rows, setRows] = React.useState<SessionDTO[]>([]);
+    const [rowCount, setRowCount] = React.useState(0);
+    const [loading, setLoading] = React.useState(false);
     const [isDeleting, setDeleting] = React.useState(false);
+    const [forceLoadKey, setForceLoadKey] = React.useState(0);
 
     const { mutate: deleteSession } = useDeleteSession();
 
     const [selectedSession, setSelectedSession] = React.useState<SessionDTO | null>(null);
     const [isModalOpen, setIsModalOpen] = React.useState(false);
 
-    // Filtrage et pagination locaux basés sur les props
-    const filteredRecords = React.useMemo(() => {
-        let filtered = [...sessions];
-        if (search) {
-            const searchLower = search.toLowerCase();
-            filtered = filtered.filter(s =>
-                s.courseName.toLowerCase().includes(searchLower) ||
-                deliveryModeLabels[s.deliveryMode as DeliveryMode]?.toLowerCase().includes(searchLower)
-            );
+    React.useEffect(() => {
+        if (refreshKey > 0) {
+            setPage(1);
+            setForceLoadKey(k => k + 1);
         }
-        return filtered;
-    }, [sessions, search]);
+    }, [refreshKey]);
 
-    const records = React.useMemo(() => {
-        const start = (page - 1) * pageSize;
-        const end = start + pageSize;
-        return filteredRecords.slice(start, end);
-    }, [filteredRecords, page, pageSize]);
+    const loadData = React.useCallback(() => {
+        setLoading(true);
+        fetchSessions({ page, pageSize, search })
+            .then(data => {
+                setRows([...data.items].sort((a, b) => b.id.localeCompare(a.id)));
+                setRowCount(data.total);
+                setLoading(false);
+            })
+            .catch(err => {
+                console.error('Erreur chargement grid sessions:', err);
+                setLoading(false);
+            });
+    }, [page, pageSize, search, fetchSessions, forceLoadKey]);
 
-    const handleSuccess = async () => {
-        await onSuccess();
-    };
+    React.useEffect(() => {
+        loadData();
+    }, [loadData]);
 
     const handleOpenCreate = () => {
         setSelectedSession(null);
@@ -60,167 +63,125 @@ export const SessionDataGrid: React.FC<Props> = ({ sessions, loading, onSuccess 
         setIsModalOpen(true);
     };
 
-    const formatDate = (dateString: string) => {
-        return new Date(dateString).toLocaleDateString('fr-FR', {
-            day: 'numeric',
-            month: 'long',
-            year: 'numeric'
+    const formatDate = (dateString: string) =>
+        new Date(dateString).toLocaleDateString('fr-FR', {
+            day: '2-digit',
+            month: '2-digit',
+            year: 'numeric',
         });
-    };
-
-    const getDeliveryModeLabel = (mode: string | number) => {
-        const modeValue = typeof mode === 'string' ? Number(mode) : mode;
-        return deliveryModeLabels[modeValue as DeliveryMode] || String(mode);
-    };
 
     const getDeliveryModeColor = (mode: string | number): string => {
         const modeValue = typeof mode === 'string' ? Number(mode) : mode;
         switch (modeValue) {
-            case DeliveryMode.InPerson: return 'blue';
-            case DeliveryMode.Remote: return 'orange';
+            case DeliveryMode.InPerson: return 'green';
+            case DeliveryMode.Remote: return 'yellow';
             default: return 'gray';
         }
     };
 
-    const columns: DataTableColumn<SessionDTO>[] = [
-        {
-            accessor: 'courseName',
-            title: 'Cours',
-            width: '30%',
-            render: (record) => <Text fw={500} size="sm">{record.courseName}</Text>
-        },
-        {
-            accessor: 'startDate',
-            title: 'Date de début',
-            width: '20%',
-            render: (record) => <Text size="sm">{formatDate(record.startDate)}</Text>,
-        },
-        {
-            accessor: 'deliveryMode',
-            title: 'Mode',
-            width: '15%',
-            render: (record) => (
-                <Badge
-                    color={getDeliveryModeColor(record.deliveryMode)}
-                    variant="light"
-                >
-                    {getDeliveryModeLabel(record.deliveryMode)}
-                </Badge>
-            ),
-        },
-        {
-            accessor: 'UserCount',
-            title: 'Remplissage',
-            width: '20%',
-            render: (record) => {
-                const max = record.course?.maxCapacity || 0;
-                const enrolled = max - record.UserCount;
-                const percentage = max > 0 ? (enrolled / max) * 100 : 0;
-
-                return (
-                    <Tooltip label={`${enrolled} / ${max} inscrits`}>
-                        <div>
-                            <Group justify="space-between" mb={4}>
-                                <Text size="xs" c="dimmed">{enrolled}/{max}</Text>
-                                <Text size="xs" fw={700}>{Math.round(percentage)}%</Text>
-                            </Group>
-                            <Progress 
-                                value={percentage} 
-                                size="sm" 
-                                color={percentage >= 100 ? 'red' : percentage > 80 ? 'orange' : 'blue'} 
-                            />
-                        </div>
-                    </Tooltip>
-                );
-            },
-        },
-        {
-            accessor: 'actions',
-            title: 'Actions',
-            textAlign: 'right',
-            width: 100,
-            render: (record) => (
-                <Group gap="xs" justify="flex-end" wrap="nowrap">
-                    <Tooltip label="Modifier">
-                        <ActionIcon
-                            variant="subtle"
-                            color="blue"
-                            onClick={() => handleOpenEdit(record)}
-                        >
-                            <IconEdit size={16} />
-                        </ActionIcon>
-                    </Tooltip>
-
-                    <Tooltip label="Supprimer">
-                        <ActionIcon
-                            variant="subtle"
-                            color="red"
-                            disabled={isDeleting}
-                            onClick={() => {
-                                if (window.confirm(`Supprimer la session du ${formatDate(record.startDate)} ?`)) {
-                                    setDeleting(true);
-                                    deleteSession(record.id, {
-                                        onSuccess: () => {
-                                            handleSuccess();
-                                            setDeleting(false);
-                                        },
-                                        onError: () => setDeleting(false)
-                                    });
-                                }
-                            }}
-                        >
-                            <IconTrash size={16} />
-                        </ActionIcon>
-                    </Tooltip>
-                </Group>
-            ),
-        },
-    ];
-
     return (
-        <div>
-            <TableToolbar
-                search={search}
-                onSearchChange={(val) => { setSearch(val); setPage(1); }}
-                onAdd={handleOpenCreate}
-                searchPlaceholder="Filtrer par cours..."
-                addButtonLabel="Nouvelle session"
-            />
+        <Stack gap="sm">
+            <Group>
+                <TextInput
+                    leftSection={<IconSearch size={16} />}
+                    placeholder="Filtrer par cours ou mode..."
+                    value={search}
+                    onChange={e => setSearch(e.target.value)}
+                    style={{ flex: 1 }}
+                />
+                <Button leftSection={<IconPlus size={16} />} onClick={handleOpenCreate}>
+                    Ajouter
+                </Button>
+            </Group>
 
             <DataTable
                 withTableBorder
-                borderRadius="md"
-                striped
+                borderRadius="sm"
                 highlightOnHover
-                records={records}
-                columns={columns}
+                records={rows}
                 fetching={loading}
-                totalRecords={filteredRecords.length}
+                totalRecords={rowCount}
                 recordsPerPage={pageSize}
                 page={page}
                 onPageChange={setPage}
-                recordsPerPageOptions={PAGE_SIZES}
-                onRecordsPerPageChange={(size) => {
-                    setPageSize(size);
-                    setPage(1);
-                }}
+                recordsPerPageOptions={[5, 10, 25, 50]}
+                onRecordsPerPageChange={p => { setPageSize(p); setPage(1); }}
                 noRecordsText="Aucune session trouvée"
-                minHeight={200}
+                columns={[
+                    {
+                        accessor: 'courseName',
+                        title: 'Cours',
+                    },
+                    {
+                        accessor: 'startDate',
+                        title: 'Date de début',
+                        render: (session) => formatDate(session.startDate),
+                    },
+                    {
+                        accessor: 'deliveryMode',
+                        title: 'Mode',
+                        render: (session) => {
+                            const modeValue = typeof session.deliveryMode === 'string'
+                                ? Number(session.deliveryMode)
+                                : session.deliveryMode;
+                            return (
+                                <Badge variant="outline" color={getDeliveryModeColor(session.deliveryMode)} fw={500}>
+                                    {deliveryModeLabels[modeValue as DeliveryMode] ?? session.deliveryMode}
+                                </Badge>
+                            );
+                        },
+                    },
+                    {
+                        accessor: 'userCount',
+                        title: 'Inscrits',
+                        textAlign: 'center',
+                        render: (session) => (
+                            <Text fw={700} c="dimmed" ta="center">
+                                {session.course.maxCapacity - session.UserCount} inscrit(s)
+                            </Text>
+                        ),
+                    },
+                    {
+                        accessor: 'actions',
+                        title: 'Actions',
+                        render: (session) => (
+                            <Group gap={4} wrap="nowrap">
+                                <Tooltip label="Modifier">
+                                    <ActionIcon variant="subtle" color="blue" onClick={() => handleOpenEdit(session)}>
+                                        <IconEdit size={16} />
+                                    </ActionIcon>
+                                </Tooltip>
+                                <Tooltip label="Supprimer">
+                                    <ActionIcon
+                                        variant="subtle"
+                                        color="red"
+                                        disabled={isDeleting}
+                                        onClick={() => {
+                                            if (window.confirm(`Supprimer la session du ${formatDate(session.startDate)} ?`)) {
+                                                setDeleting(true);
+                                                deleteSession(session.id, {
+                                                    onSuccess: () => { onSuccess(); setDeleting(false); },
+                                                    onError: () => setDeleting(false),
+                                                });
+                                            }
+                                        }}
+                                    >
+                                        <IconTrash size={16} />
+                                    </ActionIcon>
+                                </Tooltip>
+                            </Group>
+                        ),
+                    },
+                ]}
             />
 
             {isModalOpen && (
                 <SessionModal
                     session={selectedSession}
-                    onClose={() => {
-                        setIsModalOpen(false);
-                        setSelectedSession(null);
-                    }}
-                    onSuccess={() => {
-                        setIsModalOpen(false);
-                        handleSuccess();
-                    }}
+                    onClose={() => { setIsModalOpen(false); setSelectedSession(null); }}
+                    onSuccess={() => { console.log('onSuccess'); setIsModalOpen(false); onSuccess(); }}
                 />
             )}
-        </div>
+        </Stack>
     );
 };

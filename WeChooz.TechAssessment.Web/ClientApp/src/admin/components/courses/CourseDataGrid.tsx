@@ -1,53 +1,57 @@
-import * as React from 'react';
-import { DataTable, type DataTableColumn } from 'mantine-datatable';
-import { ActionIcon, Tooltip, Group, Text, Badge } from '@mantine/core';
-import { IconTrash, IconEdit } from '@tabler/icons-react';
+import React from 'react';
+import { TextInput, Button, Group, ActionIcon, Tooltip, Text, Stack } from '@mantine/core';
+import { DataTable } from 'mantine-datatable';
+import { IconEdit, IconTrash, IconPlus, IconSearch } from '@tabler/icons-react';
 import { CourseDTO } from '../../../services/courses/CourseDTO';
 import { CourseModal } from './CourseModal';
 import { useDeleteCourse } from '../../../hooks/courses/useDeleteCourse';
-import { TargetAudience, targetAudienceLabels } from "../../../services/courses/TargetAudience.ts";
-import { TableToolbar } from '../common/TableToolbar';
+import { TargetAudience, targetAudienceLabels } from '../../../services/courses/TargetAudience';
 
 interface Props {
-    courses: CourseDTO[];
-    loading: boolean;
-    onSuccess: () => void | Promise<void>;
+    fetchCourses: (params: { page: number; pageSize: number; search: string }) => Promise<{ items: CourseDTO[]; total: number }>;
+    onSuccess: () => void;
+    refreshKey: number;
 }
 
-const PAGE_SIZES = [10, 25, 50];
-
-export const CourseDataGrid: React.FC<Props> = ({ courses, loading, onSuccess }) => {
+export const CourseDataGrid: React.FC<Props> = ({ fetchCourses, onSuccess, refreshKey }) => {
     const [page, setPage] = React.useState(1);
     const [pageSize, setPageSize] = React.useState(10);
     const [search, setSearch] = React.useState('');
+    const [rows, setRows] = React.useState<CourseDTO[]>([]);
+    const [rowCount, setRowCount] = React.useState(0);
+    const [loading, setLoading] = React.useState(false);
     const [isDeleting, setDeleting] = React.useState(false);
+    const [forceLoadKey, setForceLoadKey] = React.useState(0);
 
     const { mutate: deleteCourse } = useDeleteCourse();
 
     const [selectedCourse, setSelectedCourse] = React.useState<CourseDTO | null>(null);
     const [isModalOpen, setIsModalOpen] = React.useState(false);
 
-    const filteredRecords = React.useMemo(() => {
-        let filtered = [...courses];
-        if (search) {
-            const searchLower = search.toLowerCase();
-            filtered = filtered.filter(c =>
-                c.name.toLowerCase().includes(searchLower) ||
-                (c.targetAudience && targetAudienceLabels[c.targetAudience as TargetAudience]?.toLowerCase().includes(searchLower))
-            );
+    React.useEffect(() => {
+        if (refreshKey > 0) {
+            setPage(1);
+            setForceLoadKey(k => k + 1);
         }
-        return filtered;
-    }, [courses, search]);
+    }, [refreshKey]);
 
-    const records = React.useMemo(() => {
-        const start = (page - 1) * pageSize;
-        const end = start + pageSize;
-        return filteredRecords.slice(start, end);
-    }, [filteredRecords, page, pageSize]);
+    const loadData = React.useCallback(() => {
+        setLoading(true);
+        fetchCourses({ page, pageSize, search })
+            .then(data => {
+                setRows([...data.items].sort((a, b) => b.id.localeCompare(a.id)));
+                setRowCount(data.total);
+                setLoading(false);
+            })
+            .catch(err => {
+                console.error('Erreur chargement grid cours:', err);
+                setLoading(false);
+            });
+    }, [page, pageSize, search, fetchCourses, forceLoadKey]);
 
-    const handleSuccess = async () => {
-        await onSuccess();
-    };
+    React.useEffect(() => {
+        loadData();
+    }, [loadData]);
 
     const handleOpenCreate = () => {
         setSelectedCourse(null);
@@ -59,128 +63,96 @@ export const CourseDataGrid: React.FC<Props> = ({ courses, loading, onSuccess })
         setIsModalOpen(true);
     };
 
-    const columns: DataTableColumn<CourseDTO>[] = [
-        {
-            accessor: 'name',
-            title: 'Titre du Cours',
-            width: '35%',
-            render: (record) => (
-                <Text fw={600} size="sm" c="blue.7">
-                    {record.name}
-                </Text>
-            ),
-        },
-        {
-            accessor: 'targetAudience',
-            title: 'Population cible',
-            width: '25%',
-            render: (record) => {
-                const audienceValue = record.targetAudience as TargetAudience;
-                return (
-                    <Badge variant="light" color="gray">
-                        {targetAudienceLabels[audienceValue]}
-                    </Badge>
-                );
-            },
-        },
-        {
-            accessor: 'maxCapacity',
-            title: 'Capacité Max',
-            textAlign: 'center',
-            width: 150,
-            render: (record) => (
-                <Badge variant="outline" color="dark">
-                    {record.maxCapacity} pers.
-                </Badge>
-            ),
-        },
-        {
-            accessor: 'actions',
-            title: 'Actions',
-            textAlign: 'right',
-            width: 100,
-            render: (record) => (
-                <Group gap="xs" justify="flex-end" wrap="nowrap">
-                    <Tooltip label="Modifier">
-                        <ActionIcon
-                            variant="subtle"
-                            color="blue"
-                            onClick={() => handleOpenEdit(record)}
-                        >
-                            <IconEdit size={16} />
-                        </ActionIcon>
-                    </Tooltip>
-
-                    <Tooltip label="Supprimer">
-                        <ActionIcon
-                            variant="subtle"
-                            color="red"
-                            disabled={isDeleting}
-                            onClick={() => {
-                                if (window.confirm(`Supprimer le cours "${record.name}" ?`)) {
-                                    setDeleting(true);
-                                    deleteCourse(record.id, {
-                                        onSuccess: () => {
-                                            handleSuccess();
-                                            setDeleting(false);
-                                        },
-                                        onError: () => setDeleting(false)
-                                    });
-                                }
-                            }}
-                        >
-                            <IconTrash size={16} />
-                        </ActionIcon>
-                    </Tooltip>
-                </Group>
-            ),
-        },
-    ];
-
     return (
-        <div>
-            <TableToolbar
-                search={search}
-                onSearchChange={(val) => { setSearch(val); setPage(1); }}
-                onAdd={handleOpenCreate}
-                searchPlaceholder="Rechercher un cours..."
-                addButtonLabel="Nouveau cours"
-            />
+        <Stack gap="sm">
+            <Group>
+                <TextInput
+                    leftSection={<IconSearch size={16} />}
+                    placeholder="Titre, population cible..."
+                    value={search}
+                    onChange={e => setSearch(e.target.value)}
+                    style={{ flex: 1 }}
+                />
+                <Button leftSection={<IconPlus size={16} />} onClick={handleOpenCreate}>
+                    Ajouter
+                </Button>
+            </Group>
 
             <DataTable
                 withTableBorder
-                borderRadius="md"
-                striped
+                borderRadius="sm"
                 highlightOnHover
-                records={records}
-                columns={columns}
+                records={rows}
                 fetching={loading}
-                totalRecords={filteredRecords.length}
+                totalRecords={rowCount}
                 recordsPerPage={pageSize}
                 page={page}
                 onPageChange={setPage}
-                recordsPerPageOptions={PAGE_SIZES}
-                onRecordsPerPageChange={(size) => {
-                    setPageSize(size);
-                    setPage(1);
-                }}
+                recordsPerPageOptions={[5, 10, 25, 50]}
+                onRecordsPerPageChange={p => { setPageSize(p); setPage(1); }}
                 noRecordsText="Aucun cours trouvé"
-                minHeight={200}
+                columns={[
+                    {
+                        accessor: 'name',
+                        title: 'Titre du Cours',
+                        render: (course) => (
+                            <Text fw={600} c="blue">{course.name}</Text>
+                        ),
+                    },
+                    {
+                        accessor: 'targetAudience',
+                        title: 'Population cible',
+                        render: (course) =>
+                            targetAudienceLabels[course.targetAudience as TargetAudience] ?? course.targetAudience,
+                    },
+                    {
+                        accessor: 'maxCapacity',
+                        title: 'Capacité Max',
+                        textAlign: 'center',
+                        render: (course) => <Text fw={700}>{course.maxCapacity}</Text>,
+                    },
+                    {
+                        accessor: 'actions',
+                        title: 'Actions',
+                        textAlign: 'right',
+                        render: (course) => (
+                            <Group gap={4} justify="flex-end" wrap="nowrap">
+                                <Tooltip label="Modifier">
+                                    <ActionIcon variant="subtle" color="blue" onClick={() => handleOpenEdit(course)}>
+                                        <IconEdit size={16} />
+                                    </ActionIcon>
+                                </Tooltip>
+                                <Tooltip label="Supprimer">
+                                    <ActionIcon
+                                        variant="subtle"
+                                        color="red"
+                                        disabled={isDeleting}
+                                        onClick={() => {
+                                            if (window.confirm(`Supprimer le cours "${course.name}" ?`)) {
+                                                setDeleting(true);
+                                                deleteCourse(course.id, {
+                                                    onSuccess: () => { onSuccess(); setDeleting(false); },
+                                                    onError: () => setDeleting(false),
+                                                });
+                                            }
+                                        }}
+                                    >
+                                        <IconTrash size={16} />
+                                    </ActionIcon>
+                                </Tooltip>
+                            </Group>
+                        ),
+                    },
+                ]}
             />
 
             {isModalOpen && (
                 <CourseModal
                     course={selectedCourse}
-                    onClose={() => {
-                        setIsModalOpen(false);
-                        setSelectedCourse(null);
-                    }}
-                    onSuccess={() => {
-                        setIsModalOpen(false);
-                        handleSuccess();
-                    }}
+                    onClose={() => { setIsModalOpen(false); setSelectedCourse(null); }}
+                    onSuccess={() => { setIsModalOpen(false); onSuccess(); }}
                 />
             )}
-        </div>
+        </Stack>
     );
 };

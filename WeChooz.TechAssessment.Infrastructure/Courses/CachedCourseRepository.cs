@@ -1,4 +1,4 @@
-﻿using WeChooz.TechAssessment.Domain.Common;
+using WeChooz.TechAssessment.Domain.Common;
 using WeChooz.TechAssessment.Domain.Courses;
 
 namespace WeChooz.TechAssessment.Infrastructure.Courses;
@@ -37,11 +37,11 @@ public class CachedCourseRepository : ICourseRepository
         await _cache.SetAsync(key, entities, TimeSpan.FromMinutes(5), ct);
         return entities;
     }
-    
+
     public async Task<Course> AddAsync(Course entity, CancellationToken ct = default)
     {
         var result = await _inner.AddAsync(entity, ct);
-        await _cache.RemoveAsync(Prefix, ct);
+        await _cache.RemoveAsync($"{Prefix}:all", ct);
         return result;
     }
 

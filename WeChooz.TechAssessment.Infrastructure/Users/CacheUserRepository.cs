@@ -29,7 +29,7 @@ public class CacheUserRepository: IUserRepository
     public async Task<User> AddAsync(User entity, CancellationToken ct = default)
     {
         var result = await _inner.AddAsync(entity, ct);
-        await _cache.RemoveAsync(Prefix, ct);
+        await _cache.RemoveAsync($"{Prefix}:all", ct);
         return result;
     }
 

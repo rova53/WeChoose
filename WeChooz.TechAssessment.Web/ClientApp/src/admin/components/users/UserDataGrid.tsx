@@ -1,53 +1,56 @@
-import * as React from 'react';
-import { DataTable, type DataTableColumn } from 'mantine-datatable';
-import { ActionIcon, Tooltip, Group, Text } from '@mantine/core';
-import { IconTrash, IconEdit } from '@tabler/icons-react';
+import React from 'react';
+import { TextInput, Button, Group, ActionIcon, Tooltip, Stack } from '@mantine/core';
+import { DataTable } from 'mantine-datatable';
+import { IconEdit, IconTrash, IconPlus, IconSearch } from '@tabler/icons-react';
 import { UserDTO } from '../../../services/users/UserDTO';
 import { UserModal } from './UserModal';
-import { useDeleteUser } from "../../../hooks/users/useDeleteUser.ts";
-import { TableToolbar } from '../common/TableToolbar';
+import { useDeleteUser } from '../../../hooks/users/useDeleteUser';
 
 interface Props {
-    users: UserDTO[];
-    loading: boolean;
-    onSuccess: () => void | Promise<void>
+    fetchUsers: (params: { page: number; pageSize: number; search: string }) => Promise<{ items: UserDTO[]; total: number }>;
+    onSuccess: () => void;
+    refreshKey: number;
 }
 
-const PAGE_SIZES = [10, 25, 50];
-
-export const UserDataGrid: React.FC<Props> = ({ users, loading, onSuccess }) => {
+export const UserDataGrid: React.FC<Props> = ({ fetchUsers, onSuccess, refreshKey }) => {
     const [page, setPage] = React.useState(1);
     const [pageSize, setPageSize] = React.useState(10);
     const [search, setSearch] = React.useState('');
+    const [rows, setRows] = React.useState<UserDTO[]>([]);
+    const [rowCount, setRowCount] = React.useState(0);
+    const [loading, setLoading] = React.useState(false);
     const [isDeleting, setDeleting] = React.useState(false);
+    const [forceLoadKey, setForceLoadKey] = React.useState(0);
+
     const { mutate: deleteUser } = useDeleteUser();
 
     const [selectedUser, setSelectedUser] = React.useState<UserDTO | null>(null);
     const [isModalOpen, setIsModalOpen] = React.useState(false);
 
-    const filteredRecords = React.useMemo(() => {
-        let filtered = [...users];
-        if (search) {
-            const searchLower = search.toLowerCase();
-            filtered = filtered.filter(u =>
-                u.lastName.toLowerCase().includes(searchLower) ||
-                u.firstName.toLowerCase().includes(searchLower) ||
-                u.email.toLowerCase().includes(searchLower) ||
-                (u.companyName || '').toLowerCase().includes(searchLower)
-            );
+    React.useEffect(() => {
+        if (refreshKey > 0) {
+            setPage(1);
+            setForceLoadKey(k => k + 1);
         }
-        return filtered;
-    }, [users, search]);
+    }, [refreshKey]);
 
-    const records = React.useMemo(() => {
-        const start = (page - 1) * pageSize;
-        const end = start + pageSize;
-        return filteredRecords.slice(start, end);
-    }, [filteredRecords, page, pageSize]);
+    const loadData = React.useCallback(() => {
+        setLoading(true);
+        fetchUsers({ page, pageSize, search })
+            .then(data => {
+                setRows([...data.items].sort((a, b) => b.id.localeCompare(a.id)));
+                setRowCount(data.total);
+                setLoading(false);
+            })
+            .catch(err => {
+                console.error('Erreur chargement grid:', err);
+                setLoading(false);
+            });
+    }, [page, pageSize, search, fetchUsers, forceLoadKey]);
 
-    const handleSuccess = async () => {
-        await onSuccess();
-    };
+    React.useEffect(() => {
+        loadData();
+    }, [loadData]);
 
     const handleOpenCreate = () => {
         setSelectedUser(null);
@@ -59,106 +62,79 @@ export const UserDataGrid: React.FC<Props> = ({ users, loading, onSuccess }) => 
         setIsModalOpen(true);
     };
 
-    const columns: DataTableColumn<UserDTO>[] = [
-        { accessor: 'lastName', title: 'Nom', width: '20%', sortable: true },
-        { accessor: 'firstName', title: 'Prénom', width: '20%', sortable: true },
-        { accessor: 'email', title: 'Email', width: '30%' },
-        { 
-            accessor: 'companyName', 
-            title: 'Entreprise', 
-            width: '20%',
-            render: (record) => record.companyName ? <Text size="sm">{record.companyName}</Text> : <Text size="sm" c="dimmed">-</Text>
-        },
-        {
-            accessor: 'actions',
-            title: 'Actions',
-            textAlign: 'right',
-            width: 100,
-            render: (record) => (
-                <Group gap="xs" justify="flex-end" wrap="nowrap">
-                    <Tooltip label="Modifier">
-                        <ActionIcon
-                            variant="subtle"
-                            color="blue"
-                            onClick={() => handleOpenEdit(record)}
-                        >
-                            <IconEdit size={16} />
-                        </ActionIcon>
-                    </Tooltip>
-
-                    <Tooltip label="Supprimer">
-                        <ActionIcon
-                            variant="subtle"
-                            color="red"
-                            disabled={isDeleting}
-                            onClick={() => {
-                                if (window.confirm(`Supprimer l'utilisateur ${record.firstName} ?`)) {
-                                    setDeleting(true);
-                                    deleteUser(record.id, {
-                                        onSuccess: () => {
-                                            handleSuccess();
-                                            setDeleting(false);
-                                        },
-                                        onError: (error: unknown) => {
-                                            console.error(error);
-                                            setDeleting(false);
-                                        }
-                                    });
-                                }
-                            }}
-                        >
-                            <IconTrash size={16} />
-                        </ActionIcon>
-                    </Tooltip>
-                </Group>
-            ),
-        },
-    ];
-
     return (
-        <div>
-            <TableToolbar
-                search={search}
-                onSearchChange={(val) => { setSearch(val); setPage(1); }}
-                onAdd={handleOpenCreate}
-                searchPlaceholder="Filtrer par nom, email..."
-                addButtonLabel="Ajouter un utilisateur"
-            />
+        <Stack gap="sm">
+            <Group>
+                <TextInput
+                    leftSection={<IconSearch size={16} />}
+                    placeholder="Filtrer par nom, prénom, email..."
+                    value={search}
+                    onChange={e => setSearch(e.target.value)}
+                    style={{ flex: 1 }}
+                />
+                <Button leftSection={<IconPlus size={16} />} onClick={handleOpenCreate}>
+                    Ajouter
+                </Button>
+            </Group>
 
             <DataTable
                 withTableBorder
-                borderRadius="md"
-                striped
+                borderRadius="sm"
                 highlightOnHover
-                records={records}
-                columns={columns}
+                records={rows}
                 fetching={loading}
-                totalRecords={filteredRecords.length}
+                totalRecords={rowCount}
                 recordsPerPage={pageSize}
                 page={page}
                 onPageChange={setPage}
-                recordsPerPageOptions={PAGE_SIZES}
-                onRecordsPerPageChange={(size) => {
-                    setPageSize(size);
-                    setPage(1);
-                }}
+                recordsPerPageOptions={[5, 10, 25, 50]}
+                onRecordsPerPageChange={p => { setPageSize(p); setPage(1); }}
                 noRecordsText="Aucun utilisateur trouvé"
-                minHeight={200}
+                columns={[
+                    { accessor: 'lastName', title: 'Nom' },
+                    { accessor: 'firstName', title: 'Prénom' },
+                    { accessor: 'email', title: 'Email' },
+                    {
+                        accessor: 'actions',
+                        title: 'Actions',
+                        render: (user) => (
+                            <Group gap={4} wrap="nowrap">
+                                <Tooltip label="Modifier">
+                                    <ActionIcon variant="subtle" color="blue" onClick={() => handleOpenEdit(user)}>
+                                        <IconEdit size={16} />
+                                    </ActionIcon>
+                                </Tooltip>
+                                <Tooltip label="Supprimer">
+                                    <ActionIcon
+                                        variant="subtle"
+                                        color="red"
+                                        disabled={isDeleting}
+                                        onClick={() => {
+                                            if (window.confirm(`Supprimer l'utilisateur ${user.firstName} ?`)) {
+                                                setDeleting(true);
+                                                deleteUser(user.id, {
+                                                    onSuccess: () => { onSuccess(); setDeleting(false); },
+                                                    onError: (error) => { console.error(error); setDeleting(false); },
+                                                });
+                                            }
+                                        }}
+                                    >
+                                        <IconTrash size={16} />
+                                    </ActionIcon>
+                                </Tooltip>
+                            </Group>
+                        ),
+                    },
+                ]}
             />
 
             {isModalOpen && (
                 <UserModal
                     user={selectedUser}
-                    onClose={() => {
-                        setIsModalOpen(false);
-                        setSelectedUser(null);
-                    }}
-                    onSuccess={() => {
-                        setIsModalOpen(false);
-                        handleSuccess();
-                    }}
+                    onClose={() => { setIsModalOpen(false); setSelectedUser(null); }}
+                    onSuccess={() => { setIsModalOpen(false); onSuccess(); }}
                 />
             )}
-        </div>
+        </Stack>
     );
 };
